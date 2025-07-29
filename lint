@@ -1,0 +1,15 @@
+#!/usr/bin/env fish
+function debug
+  set_color brgreen
+  echo ">>> $argv"
+  set_color normal
+  $argv
+end
+
+alias sort-imports="debug ruff check --select=I --fix src"
+
+debug ruff format --config=pyproject.toml src \
+  && debug sort-imports \
+  && debug ruff check --config=pyproject.toml src \
+  && debug ty check src \
+  && debug pylint --rcfile=pyproject.toml src

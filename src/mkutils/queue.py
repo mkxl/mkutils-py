@@ -1,0 +1,158 @@
+import collections
+import dataclasses
+from asyncio import Task
+from collections.abc import AsyncIterable, AsyncIterator, Generator, Iterable
+from typing import Any, ClassVar, Self
+
+from mkutils.sink import Sink
+from mkutils.typing import AsyncFunction
+from mkutils.utils import Utils
+
+# NOTE:
+# - prefer this implementation over the hume __await__ based one because of
+#   [https://stackoverflow.com/a/63966273]
+# - NOTE-b68740: maintains invariant that if [self.head] is pending then [self.tail] is empty
+# @dataclasses.dataclass(kw_only=True)
+# class Queue[T](Sink[T]):
+#     APPEND_ITEM_ERROR_MESSAGE: ClassVar[str] = "unable to send value because the queue is closed"
+#     INITIAL_IS_CLOSED: ClassVar[bool] = False
+
+#     head: Future[T]
+#     tail: collections.deque[T]
+#     is_closed: bool
+
+#     @classmethod
+#     async def new(cls) -> Self:
+#         head = await Utils.future()
+#         queue = cls(head=head, tail=collections.deque(), is_closed=cls.INITIAL_IS_CLOSED)
+
+#         return queue
+
+#     async def __aiter__(self) -> AsyncIterator[T]:
+#         while True:
+#             # NOTE: break if self.head is pending and self.is_closed
+#             if not self.head.done() and self.is_closed:
+#                 break
+
+#             old_head = await self.head
+#             self.head = await Utils.future()
+
+#             # NOTE: bc [self.head] is now pending, give it a value if possible in order to to maintain [NOTE-b68740]
+#             if 0 < len(self.tail):
+#                 self.head.set_result(self.tail.popleft())
+
+#             yield old_head
+
+#     async def asend(self, value: T) -> None:
+#         if self.is_closed:
+#             raise ValueError(self.APPEND_ITEM_ERROR_MESSAGE)
+
+#         # NOTE: bc of [NOTE-b68740], in the [else] branch, can assume that [self.tail] is empty and just set
+#         # [self.head]'s result directly
+#         if self.head.done():
+#             self.tail.append(value)
+#         else:
+#             self.head.set_result(value)
+
+#     async def aclose(self) -> None:
+#         self.is_closed = True
+
+#     def get_event_loop(self) -> AbstractEventLoop:
+#         return self.head.get_loop()
+
+
+@dataclasses.dataclass(kw_only=True)
+class Queue[T](Sink[T]):
+    APPEND_ITEM_ERROR_MESSAGE: ClassVar[str] = "unable to append item because the queue is closed"
+    INITIAL_IS_CLOSED: ClassVar[bool] = False
+
+    items: collections.deque[T]
+    is_closed: bool
+
+    @classmethod
+    def new(cls) -> Self:
+        return cls(items=collections.deque(), is_closed=cls.INITIAL_IS_CLOSED)
+
+    def __await__(self) -> Generator[Any, Any, T]:
+        while True:
+            if 0 < len(self.items):  # noqa: SIM300
+                return self.items.popleft()
+
+            if self.is_closed:
+                raise StopAsyncIteration
+
+            yield
+
+    async def __anext__(self) -> T:
+        return await self
+
+    def __aiter__(self) -> Self:
+        return self
+
+    def append(self, item: T) -> None:
+        if self.is_closed:
+            raise ValueError(self.APPEND_ITEM_ERROR_MESSAGE)
+
+        self.items.append(item)
+
+    def extend(self, item_iter: Iterable[T]) -> None:
+        for item in item_iter:
+            self.append(item)
+
+    async def asend(self, value: T) -> None:
+        self.append(value)
+
+    async def aclose(self) -> None:
+        self.is_closed = True
+
+
+# NOTE: for cases where i want to start aggregating/collecting results right now, but i want to actually iterate and
+# process them later, but i don't want to wait for the aggregation to finish before i can start iterating and processing
+@dataclasses.dataclass(kw_only=True)
+class EagerQueue[T]:
+    queue: Queue[T]
+    task: Task[None]
+
+    @classmethod
+    def new(cls, item_iter: AsyncIterable[T]) -> Self:
+        queue = Queue.new()
+        task = Utils.create_task(queue.aconsume, item_iter)
+        eager_queue = cls(queue=queue, task=task)
+
+        return eager_queue
+
+    async def __aiter__(self) -> AsyncIterator[T]:
+        # NOTE-eec4b0:
+        # - [queue.aconsume()] runs with an [contextlib.aclosing()] contextmanager so any exceptions that are raised
+        #   there will close the queue, preventing the iteration below from hanging
+        # - the below [await self.task] statement will then re-raise that exception
+        async for item in self.queue:
+            yield item
+
+        await self.task
+
+
+# NOTE:
+# - all created tasks are run simultaneously (as a result of calling [asyncio.create_Task])
+# - but they're yielded in the order added
+@dataclasses.dataclass(kw_only=True)
+class TaskQueue[T]:
+    task_queue: Queue[Task[T]]
+
+    @classmethod
+    def new(cls) -> Self:
+        inner_task_queue = Queue.new()
+        task_queue = cls(task_queue=inner_task_queue)
+
+        return task_queue
+
+    async def __aiter__(self) -> AsyncIterator[T]:
+        async for task in self.task_queue:
+            yield await task
+
+    def create_task[**P](self, fn: AsyncFunction[P, T], *args: P.args, **kwargs: P.kwargs) -> Task[T]:
+        task = Utils.create_task(fn, *args, **kwargs)
+
+        self.task_queue.append(task)
+
+        return task
