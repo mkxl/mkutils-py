@@ -5,7 +5,6 @@ import inspect
 from asyncio import FIRST_COMPLETED, Future, Task
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Coroutine, Iterator
 from contextlib import AbstractContextManager
-from pathlib import Path
 from typing import (
     Any,
     ClassVar,
@@ -137,7 +136,6 @@ class Utils:
     def json_loads(cls, json_str: str) -> Any:
         return orjson.loads(json_str)
 
-    # NOTE: typer requires that enum variant values be hashable so we add a [__hash__()] method
     @staticmethod
     def keyed_by[T](*, attr: str) -> Callable[[type[T]], type[T]]:
         def decorator(cls: type[T]) -> type[T]:
