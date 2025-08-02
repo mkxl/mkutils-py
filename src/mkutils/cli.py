@@ -37,8 +37,10 @@ class Cli:
     def _default_callback() -> None:
         pass
 
-    def add_callback(self, *, fn: SyncFunction[Any, Any]) -> None:
+    def add_callback(self, *, fn: SyncFunction[Any, Any]) -> Self:
         self.typer.callback()(fn)
+
+        return self
 
     def _init(self, *, add_default_callback: bool) -> None:
         if add_default_callback:
