@@ -8,11 +8,10 @@ from mkutils.process import Process
 from mkutils.queue import EagerQueue, Queue, TaskQueue
 from mkutils.sink import Sink
 from mkutils.time import Datetime, Duration
-from mkutils.typing import AnyFunction, AsyncFunction, Function, JsonObject
+from mkutils.typing import AsyncFunction, Function, JsonObject, SyncFunction
 from mkutils.utils import Shape, Utils
 
 __all__: list[str] = [
-    "AnyFunction",
     "AsyncFunction",
     "Audio",
     "AudioFormat",
@@ -37,6 +36,7 @@ __all__: list[str] = [
     "Queue",
     "Shape",
     "Sink",
+    "SyncFunction",
     "TaskQueue",
     "Utils",
 ]

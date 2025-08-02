@@ -5,7 +5,7 @@ import functools
 import inspect
 import logging
 import traceback
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextvars import ContextVar
 from enum import StrEnum
 from logging import Formatter as StdFormatter
@@ -13,7 +13,7 @@ from logging import Logger as StdLogger
 from logging import LogRecord, StreamHandler
 from typing import Any, ClassVar, Optional, Self, TextIO
 
-from mkutils.typing import AnyFunction, JsonObject
+from mkutils.typing import Function, JsonObject, SyncFunction
 from mkutils.utils import Utils
 
 
@@ -160,8 +160,8 @@ class Logger:
 
         return traceback_str
 
-    def instrument[**P, T](self, *, level: Level = DEFAULT_LEVEL) -> Callable[[AnyFunction[P, T]], AnyFunction[P, T]]:
-        def decorator(fn: AnyFunction[P, T]) -> AnyFunction[P, T]:
+    def instrument[**P, T](self, *, level: Level = DEFAULT_LEVEL) -> SyncFunction[Function[P, T], Function[P, T]]:
+        def decorator(fn: Function[P, T]) -> Function[P, T]:
             if inspect.isgeneratorfunction(fn):
 
                 def new_fn(*args: P.args, **kwargs: P.kwargs) -> T:  # ty: ignore[invalid-return-type]

@@ -1,10 +1,7 @@
 import asyncio
-import contextlib
 import functools
-import inspect
 from asyncio import FIRST_COMPLETED, Future, Task
-from collections.abc import AsyncIterable, AsyncIterator, Callable, Coroutine, Iterator
-from contextlib import AbstractContextManager
+from collections.abc import AsyncIterable, AsyncIterator, Coroutine, Iterator
 from typing import (
     Any,
     ClassVar,
@@ -18,11 +15,10 @@ import yaml
 from httpx import URL, HTTPError, Response
 from orjson import JSONDecodeError as ORJSONDecodeError
 from pydantic import BaseModel, TypeAdapter
-from typer import Typer
 
 from mkutils.interval import Interval
 from mkutils.time import Duration
-from mkutils.typing import AsyncFunction, Function, JsonObject
+from mkutils.typing import AsyncFunction, JsonObject, SyncFunction
 
 
 class Shape:
@@ -40,28 +36,9 @@ class Utils:
         async for _value in value_iter:
             pass
 
-    @classmethod
-    def add_typer_command(cls, *, typer: Typer, fn: Union[Function[Any, Any], AsyncFunction[Any, Any]]) -> None:
-        if inspect.iscoroutinefunction(fn):
-            fn = cls.to_sync_fn(fn)
-
-        typer.command()(fn)
-
     @staticmethod
     async def aonce[T](value: T) -> AsyncIterator[T]:
         yield value
-
-    @classmethod
-    @contextlib.contextmanager
-    def context_map[T, S: AbstractContextManager](
-        cls, *, value: Optional[S], fn: Optional[Callable[[S], T]]
-    ) -> Iterator[Optional[Union[S, T]]]:
-        if value is None:
-            yield None
-        elif fn is None:
-            yield value
-        else:
-            yield fn(value)
 
     @staticmethod
     def create_task[**P, T](fn: AsyncFunction[P, T], *args: P.args, **kwargs: P.kwargs) -> Task[T]:
@@ -137,7 +114,7 @@ class Utils:
         return orjson.loads(json_str)
 
     @staticmethod
-    def keyed_by[T](*, attr: str) -> Callable[[type[T]], type[T]]:
+    def keyed_by[T](*, attr: str) -> SyncFunction[type[T], type[T]]:
         def decorator(cls: type[T]) -> type[T]:
             def __str__(self) -> str:
                 return getattr(self, attr)
@@ -180,7 +157,7 @@ class Utils:
             raise value_error from exc
 
     @staticmethod
-    def to_sync_fn[T, **P](async_fn: AsyncFunction[P, T]) -> Function[P, T]:
+    def to_sync_fn[T, **P](async_fn: AsyncFunction[P, T]) -> SyncFunction[P, T]:
         @functools.wraps(async_fn)
         def fn(*args: P.args, **kwargs: P.kwargs) -> T:
             coroutine = async_fn(*args, **kwargs)
