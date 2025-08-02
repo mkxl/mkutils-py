@@ -1,4 +1,5 @@
 from mkutils.audio import Audio, AudioFormat, AudioFormatInfo, AudioInfo
+from mkutils.cli import Cli
 from mkutils.enum import Enum
 from mkutils.http import Http, HttpRequest
 from mkutils.interval import Interval
@@ -17,6 +18,7 @@ __all__: list[str] = [
     "AudioFormat",
     "AudioFormatInfo",
     "AudioInfo",
+    "Cli",
     "Datetime",
     "Dtype",
     "DtypeInfo",
