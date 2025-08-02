@@ -82,14 +82,13 @@ class HttpRequest:
                 continue
 
             line = raw_line.removeprefix(self.SSE_LINE_PREFIX).strip()
-            validation_error = None
 
             if line == self.SSE_TERMINAL_LINE:
                 break
 
             try:
                 yield type_adapter.validate_json(line)
-            except ValidationError as validation_error_:
-                validation_error = validation_error_
-
-            logger.debug(iter_sse_raw_line=raw_line, validation_error=validation_error)
+            except ValidationError as validation_error:
+                logger.warning(iter_sse_raw_line=raw_line, validation_error=validation_error)
+            else:
+                logger.debug(iter_sse_raw_line=raw_line)
