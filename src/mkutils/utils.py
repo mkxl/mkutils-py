@@ -1,8 +1,9 @@
 import asyncio
+import base64
 import functools
 import textwrap
 from asyncio import FIRST_COMPLETED, Future, Task
-from collections.abc import AsyncIterable, AsyncIterator, Coroutine, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Iterator
 from typing import (
     Any,
     ClassVar,
@@ -43,9 +44,51 @@ class Utils:
             yield value
             yield filler
 
+    # NOTE: inspired by [https://stackoverflow.com/a/62309083]
+    @classmethod
+    async def amerge[T](cls, *value_iters: AsyncIterable[T]) -> AsyncIterator[T]:
+        value_iter_from_anext_task = {cls._anext_task(value_iter): value_iter for value_iter in map(aiter, value_iters)}
+
+        while 0 < len(value_iter_from_anext_task):  # noqa: SIM300
+            completed_tasks, _pending_tasks = await cls.await_first(*value_iter_from_anext_task.keys())
+
+            for completed_task in completed_tasks:
+                try:
+                    yield completed_task.result()
+                except StopAsyncIteration:
+                    pass
+                else:
+                    value_iter = value_iter_from_anext_task[completed_task]
+                    anext_task = cls._anext_task(value_iter)
+                    value_iter_from_anext_task[anext_task] = value_iter
+                finally:
+                    value_iter_from_anext_task.pop(completed_task)
+
+    @classmethod
+    def _anext_task[T](cls, value_iter: AsyncIterable[T]) -> Task[T]:
+        return cls.create_task(anext, value_iter)
+
     @staticmethod
     async def aonce[T](value: T) -> AsyncIterator[T]:
         yield value
+
+    @staticmethod
+    async def await_first[T](*awaitables: Awaitable[T]) -> tuple[set[Task[T]], set[Task[T]]]:
+        # NOTE: can't use a generator here but map() works
+        tasks = map(asyncio.create_task, awaitables)
+        completed_tasks, _pending_tasks = pair = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
+
+        for task in completed_tasks:
+            exception = task.exception()
+
+            if exception is not None:
+                raise exception
+
+        return pair
+
+    @classmethod
+    def b64encode(cls, byte_str: bytes) -> str:
+        return base64.b64encode(byte_str).decode(encoding=cls.ENCODING)
 
     @staticmethod
     def create_task[**P, T](fn: AsyncFunction[P, T], *args: P.args, **kwargs: P.kwargs) -> Task[T]:
@@ -148,6 +191,10 @@ class Utils:
         return decorator
 
     @staticmethod
+    def largest_multiple_leq(*, value: int, max_value: int) -> int:
+        return (max_value // value) * value
+
+    @staticmethod
     def model_validate_yaml[S: BaseModel](yaml_str: str, *, type_arg: type[S]) -> S:
         value = yaml.safe_load(yaml_str)
         base_model = TypeAdapter(type_arg).validate_python(value)
@@ -198,18 +245,6 @@ class Utils:
         value_error = ValueError(error_str)
 
         return value_error
-
-    @staticmethod
-    async def wait(*coros: Coroutine[Any, Any, Any]) -> None:
-        # NOTE: can't use a generator here but map() works
-        tasks = map(asyncio.create_task, coros)
-        completed_tasks, _pending_tasks = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
-
-        for task in completed_tasks:
-            exception = task.exception()
-
-            if exception is not None:
-                raise exception
 
     # NOTE: yield points: [https://tokio.rs/blog/2020-04-preemption]
     @staticmethod

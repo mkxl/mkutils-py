@@ -1,4 +1,5 @@
 from mkutils.audio import Audio, AudioFormat, AudioFormatInfo, AudioInfo
+from mkutils.base_64_stream import Base64Stream
 from mkutils.cli import Cli
 from mkutils.enum import Enum
 from mkutils.http import Http, HttpRequest
@@ -19,6 +20,7 @@ __all__: list[str] = [
     "AudioFormat",
     "AudioFormatInfo",
     "AudioInfo",
+    "Base64Stream",
     "Cli",
     "Datetime",
     "Dtype",
