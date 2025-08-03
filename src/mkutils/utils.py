@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import textwrap
 from asyncio import FIRST_COMPLETED, Future, Task
 from collections.abc import AsyncIterable, AsyncIterator, Coroutine, Iterator
 from typing import (
@@ -46,6 +47,13 @@ class Utils:
         task = asyncio.create_task(coro)
 
         return task
+
+    @staticmethod
+    def dedent(text: str) -> str:
+        text = text.lstrip("\n")
+        text = textwrap.dedent(text)
+
+        return text
 
     @staticmethod
     def ensure_string(string: Optional[str]) -> str:

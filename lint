@@ -6,7 +6,7 @@ function debug
   $argv
 end
 
-alias sort-imports="debug ruff check --select=I --fix src"
+alias sort-imports="ruff check --select=I --fix src"
 
 debug ruff format --config=pyproject.toml src \
   && debug sort-imports \
