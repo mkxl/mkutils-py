@@ -81,7 +81,7 @@ class JsonFormatter(StdFormatter):
         return Utils.json_dumps(json_obj)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class Logger:
     CONTEXT_VAR: ClassVar[ContextVar[JsonObject]] = ContextVar(
         "logger",
@@ -89,9 +89,9 @@ class Logger:
     )
     DEFAULT_INCLUDE_SPANS: ClassVar[bool] = False
     DEFAULT_LEVEL: ClassVar[Level] = Level.INFO
+    DEFAULT_MIN_LEVEL: ClassVar[Level] = Level.DEBUG
     DEFAULT_POPULATE_MESSAGE: ClassVar[bool] = False
     LOGGING_FORCE: ClassVar[bool] = True
-    MIN_LEVEL: ClassVar[Level] = Level.DEBUG
     SPANS_FIELD_NAME: ClassVar[str] = "spans"
 
     std_logger: StdLogger
@@ -191,16 +191,26 @@ class Logger:
 
         return decorator
 
-    @classmethod
-    def _add_stream_handler(
-        cls, *, root_logger: StdLogger, json_formatter: JsonFormatter, stream: Optional[Any], level: Level
+    @staticmethod
+    def _root_std_logger() -> StdLogger:
+        return logging.getLogger()
+
+    @staticmethod
+    def _remove_handlers(*, std_logger: StdLogger) -> None:
+        for handler in std_logger.handlers:
+            std_logger.removeHandler(handler)
+
+    @staticmethod
+    def _add_handler(
+        *, std_logger: StdLogger, json_formatter: JsonFormatter, stream: Optional[Any], level: Level
     ) -> None:
         stream_handler = StreamHandler(stream=stream)
 
         stream_handler.setFormatter(json_formatter)
         stream_handler.setLevel(level.level)
-        root_logger.addHandler(stream_handler)
+        std_logger.addHandler(stream_handler)
 
+    # pylint: disable=too-many-arguments
     @classmethod
     def init(
         cls,
@@ -209,15 +219,23 @@ class Logger:
         debug_file: Optional[TextIO] = None,
         include_spans: bool = DEFAULT_INCLUDE_SPANS,
         populate_message: bool = DEFAULT_POPULATE_MESSAGE,
+        min_level: Level = DEFAULT_MIN_LEVEL,
     ) -> None:
-        root_logger = logging.getLogger()
+        std_logger = cls._root_std_logger()
         json_formatter = JsonFormatter(include_spans=include_spans, populate_message=populate_message)
 
-        root_logger.setLevel(cls.MIN_LEVEL.level)
-
-        cls._add_stream_handler(root_logger=root_logger, json_formatter=json_formatter, stream=None, level=level)
+        std_logger.setLevel(min_level.level)
+        cls._remove_handlers(std_logger=std_logger)
+        cls._add_handler(std_logger=std_logger, json_formatter=json_formatter, stream=None, level=level)
 
         if debug_file is not None:
-            cls._add_stream_handler(
-                root_logger=root_logger, json_formatter=json_formatter, stream=debug_file, level=cls.MIN_LEVEL
-            )
+            cls._add_handler(std_logger=std_logger, json_formatter=json_formatter, stream=debug_file, level=min_level)
+
+    @classmethod
+    def adopt_root_handlers(cls, *, logger_name: str) -> None:
+        std_logger = logging.getLogger(logger_name)
+
+        cls._remove_handlers(std_logger=std_logger)
+
+        for handler in cls._root_std_logger().handlers:
+            std_logger.addHandler(handler)
