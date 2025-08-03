@@ -38,6 +38,12 @@ class Utils:
             pass
 
     @staticmethod
+    async def aintersperse[T](*, value_iter: AsyncIterable[T], filler: T) -> AsyncIterator[T]:
+        async for value in value_iter:
+            yield value
+            yield filler
+
+    @staticmethod
     async def aonce[T](value: T) -> AsyncIterator[T]:
         yield value
 
@@ -203,5 +209,5 @@ class Utils:
 
     # NOTE: yield points: [https://tokio.rs/blog/2020-04-preemption]
     @staticmethod
-    async def yield_now() -> None:
-        await Duration.new(seconds=0).sleep()
+    async def yield_now(*, seconds: float = Duration.DEFAULT_SECONDS) -> None:
+        await Duration.new(seconds=seconds).sleep()
