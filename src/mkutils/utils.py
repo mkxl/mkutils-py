@@ -108,9 +108,13 @@ class Utils:
         return left + right  # ty: ignore[unsupported-operator]
 
     @classmethod
+    def json_dump(cls, value: BaseModel) -> JsonObject:
+        return value.model_dump(mode=cls.PYDANTIC_BASE_MODEL_DUMP_MODE)
+
+    @classmethod
     def _json_dumps_default(cls, value: Any) -> Union[str, JsonObject]:
         if isinstance(value, BaseModel):
-            return value.model_dump(mode=cls.PYDANTIC_BASE_MODEL_DUMP_MODE)
+            return cls.json_dump(value)
 
         return str(value)
 
