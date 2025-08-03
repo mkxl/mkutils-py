@@ -4,7 +4,7 @@ from typing import Optional, Self
 
 
 @dataclasses.dataclass(kw_only=True)
-class StringSequence:
+class StringBuffer:
     strings: list[str]
     length: int
 

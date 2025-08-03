@@ -8,6 +8,7 @@ from mkutils.microphone import Dtype, DtypeInfo, Microphone
 from mkutils.process import Process
 from mkutils.queue import EagerQueue, Queue, TaskQueue
 from mkutils.sink import Sink
+from mkutils.string_buffer import StringBuffer
 from mkutils.time import Datetime, Duration
 from mkutils.typing import AsyncFunction, Function, JsonObject, SyncFunction
 from mkutils.utils import Shape, Utils
@@ -38,6 +39,7 @@ __all__: list[str] = [
     "Queue",
     "Shape",
     "Sink",
+    "StringBuffer",
     "SyncFunction",
     "TaskQueue",
     "Utils",
