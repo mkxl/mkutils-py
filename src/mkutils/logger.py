@@ -232,8 +232,8 @@ class Logger:
             cls._add_handler(std_logger=std_logger, json_formatter=json_formatter, stream=debug_file, level=min_level)
 
     @classmethod
-    def adopt_root_handlers(cls, *, logger_name: str) -> None:
-        std_logger = logging.getLogger(logger_name)
+    def adopt_root_handlers(cls, *, name: str) -> None:
+        std_logger = logging.getLogger(name)
 
         cls._remove_handlers(std_logger=std_logger)
 
