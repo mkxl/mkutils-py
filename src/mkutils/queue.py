@@ -116,14 +116,14 @@ class EagerQueue[T]:
     @classmethod
     def new(cls, item_iter: AsyncIterable[T]) -> Self:
         queue = Queue.new()
-        task = Utils.create_task(queue.aconsume, item_iter)
+        task = Utils.create_task(queue.afeed, item_iter)
         eager_queue = cls(queue=queue, task=task)
 
         return eager_queue
 
     async def __aiter__(self) -> AsyncIterator[T]:
         # NOTE-eec4b0:
-        # - [queue.aconsume()] runs with an [contextlib.aclosing()] contextmanager so any exceptions that are raised
+        # - [queue.afeed()] runs with an [contextlib.aclosing()] contextmanager so any exceptions that are raised
         #   there will close the queue, preventing the iteration below from hanging
         # - the below [await self.task] statement will then re-raise that exception
         async for item in self.queue:
