@@ -1,5 +1,5 @@
 from enum import Enum as StdEnum
-from typing import Any, Self
+from typing import Any, Self, Union
 
 import pydantic_core.core_schema
 from pydantic import GetCoreSchemaHandler
@@ -16,15 +16,29 @@ class Enum(StdEnum):
     def string_repr(self) -> str:
         return str(self.value)
 
+    @staticmethod
+    def _validation_error(obj: Any) -> ValueError:
+        return ValueError(f"no matching enum variant for {obj=!r}")
+
     @classmethod
-    def _validator_fn(cls, string_repr: str) -> Self:
+    def _validate_from_str(cls, string_repr: str) -> Self:
         matching_enum_variant_iter = (enum_variant for enum_variant in cls if enum_variant.string_repr() == string_repr)
 
         match next(matching_enum_variant_iter, None):
             case None:
-                raise ValueError(f"no matching enum variant for {string_repr=!r}")
+                raise cls._validation_error(string_repr)
             case matching_enum_variant:
                 return matching_enum_variant
+
+    @classmethod
+    def _validator_fn(cls, obj: Union[str, Self]) -> Self:
+        if isinstance(obj, cls):
+            return obj
+
+        if isinstance(obj, str):
+            return cls._validate_from_str(obj)
+
+        raise cls._validation_error(obj)
 
     # pylint: disable=line-too-long
     # NOTE:
