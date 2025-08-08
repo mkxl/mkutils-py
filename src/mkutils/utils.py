@@ -3,7 +3,7 @@ import base64
 import functools
 import textwrap
 from asyncio import FIRST_COMPLETED, Future, Task
-from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Iterable, Iterator
 from typing import (
     Any,
     ClassVar,
@@ -18,8 +18,11 @@ from httpx import URL, HTTPError, Response
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from mkutils.interval import Interval
+from mkutils.logger import JsonFormatter, Logger
 from mkutils.time import Duration
 from mkutils.typing import AsyncFunction, JsonObject, SyncFunction
+
+logger: Logger = Logger.new(__name__)
 
 
 class Shape:
@@ -29,8 +32,7 @@ class Shape:
 
 # pylint: disable=too-many-public-methods
 class Utils:
-    ENCODING: ClassVar[str] = "utf-8"
-    PYDANTIC_BASE_MODEL_DUMP_MODE: ClassVar[str] = "json"
+    ENCODING: ClassVar[str] = JsonFormatter.ENCODING
 
     @staticmethod
     async def aconsume(value_iter: AsyncIterable[Any]) -> None:
@@ -49,7 +51,8 @@ class Utils:
         value_iter_from_anext_task = {cls._anext_task(value_iter): value_iter for value_iter in map(aiter, value_iters)}
 
         while 0 < len(value_iter_from_anext_task):  # noqa: SIM300
-            completed_tasks, _pending_tasks = await cls.await_first(*value_iter_from_anext_task.keys())
+            anext_tasks = value_iter_from_anext_task.keys()
+            completed_tasks, _pending_tasks = await cls.await_first(*anext_tasks, raise_exceptions=False)
 
             for completed_task in completed_tasks:
                 try:
@@ -72,18 +75,26 @@ class Utils:
         yield value
 
     @staticmethod
-    async def await_first[T](*awaitables: Awaitable[T]) -> tuple[set[Task[T]], set[Task[T]]]:
+    async def aiter[T](value_iter: Iterable[T]) -> AsyncIterator[T]:
+        for value in value_iter:
+            yield value
+
+    @staticmethod
+    async def await_first[T](
+        *awaitables: Awaitable[T], raise_exceptions: bool = True
+    ) -> tuple[set[Task[T]], set[Task[T]]]:
         # NOTE: can't use a generator here
         tasks = [
             awaitable if isinstance(awaitable, Task) else asyncio.create_task(awaitable) for awaitable in awaitables
         ]
         completed_tasks, _pending_tasks = pair = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
 
-        for task in completed_tasks:
-            exception = task.exception()
+        if raise_exceptions:
+            for task in completed_tasks:
+                exception = task.exception()
 
-            if exception is not None:
-                raise exception
+                if exception is not None:
+                    raise exception
 
         return pair
 
@@ -153,22 +164,11 @@ class Utils:
 
     @classmethod
     def json_dump(cls, value: BaseModel) -> JsonObject:
-        return value.model_dump(mode=cls.PYDANTIC_BASE_MODEL_DUMP_MODE)
+        return JsonFormatter.dump(value)
 
-    @classmethod
-    def _json_dumps_default(cls, value: Any) -> Union[str, JsonObject]:
-        if isinstance(value, BaseModel):
-            return cls.json_dump(value)
-
-        return str(value)
-
-    # NOTE-17964d: use orjson because it's faster [https://github.com/ijl/orjson?tab=readme-ov-file#serialize]
     @classmethod
     def json_dumps(cls, json_obj: Optional[JsonObject] = None, **kwargs: Any) -> str:
-        json_obj = kwargs if json_obj is None else (json_obj | kwargs)
-        json_str = orjson.dumps(json_obj, default=cls._json_dumps_default).decode(cls.ENCODING)
-
-        return json_str
+        return JsonFormatter.dumps(json_obj, **kwargs)
 
     # NOTE-17964d
     @classmethod

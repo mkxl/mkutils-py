@@ -11,10 +11,12 @@ from enum import StrEnum
 from logging import Formatter as StdFormatter
 from logging import Logger as StdLogger
 from logging import LogRecord, StreamHandler
-from typing import Any, ClassVar, Optional, Self, TextIO
+from typing import Any, ClassVar, Optional, Self, TextIO, Union
+
+import orjson
+from pydantic import BaseModel
 
 from mkutils.typing import Function, JsonObject, SyncFunction
-from mkutils.utils import Utils
 
 
 class Level(StrEnum):
@@ -29,6 +31,9 @@ class Level(StrEnum):
 
 
 class JsonFormatter(StdFormatter):
+    ENCODING: ClassVar[str] = "utf-8"
+    PYDANTIC_BASE_MODEL_DUMP_MODE: ClassVar[str] = "json"
+
     def __init__(self, *, include_spans: bool, populate_message: bool):
         super().__init__()
 
@@ -57,6 +62,22 @@ class JsonFormatter(StdFormatter):
 
         return None
 
+    @classmethod
+    def dump(cls, value: BaseModel) -> JsonObject:
+        return value.model_dump(mode=cls.PYDANTIC_BASE_MODEL_DUMP_MODE)
+
+    @classmethod
+    def _dumps_default(cls, value: Any) -> Union[str, JsonObject]:
+        return cls.dump(value) if isinstance(value, BaseModel) else str(value)
+
+    # NOTE-17964d: use orjson because it's faster [https://github.com/ijl/orjson?tab=readme-ov-file#serialize]
+    @classmethod
+    def dumps(cls, json_obj: Optional[JsonObject] = None, **kwargs: Any) -> str:
+        json_obj = kwargs if json_obj is None else (json_obj | kwargs)
+        json_str = orjson.dumps(json_obj, default=cls._dumps_default).decode(cls.ENCODING)
+
+        return json_str
+
     def format(self, record: LogRecord) -> str:
         timestamp = datetime.datetime.fromtimestamp(record.created, tz=datetime.UTC).isoformat()
         process = str(record.process)
@@ -78,7 +99,7 @@ class JsonFormatter(StdFormatter):
         if isinstance(record.exc_info, tuple):
             fields["traceback"] = self.formatException(record.exc_info)
 
-        return Utils.json_dumps(json_obj)
+        return self.dumps(json_obj)
 
 
 @dataclasses.dataclass(kw_only=True)
