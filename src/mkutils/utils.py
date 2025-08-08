@@ -73,8 +73,10 @@ class Utils:
 
     @staticmethod
     async def await_first[T](*awaitables: Awaitable[T]) -> tuple[set[Task[T]], set[Task[T]]]:
-        # NOTE: can't use a generator here but map() works
-        tasks = map(asyncio.create_task, awaitables)
+        # NOTE: can't use a generator here
+        tasks = [
+            awaitable if isinstance(awaitable, Task) else asyncio.create_task(awaitable) for awaitable in awaitables
+        ]
         completed_tasks, _pending_tasks = pair = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
 
         for task in completed_tasks:
