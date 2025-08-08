@@ -69,8 +69,8 @@ class Audio:
         return cls(data=data, sample_rate=sample_rate)
 
     @classmethod
-    def empty(cls, *, sample_rate: int, num_channels: int) -> Self:
-        data = numpy.zeros((0, num_channels))
+    def silence(cls, *, num_samples: int, num_channels: int, sample_rate: int) -> Self:
+        data = numpy.zeros((num_samples, num_channels))
         audio = cls.from_values(data=data, sample_rate=sample_rate)
 
         return audio

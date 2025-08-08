@@ -15,8 +15,7 @@ from typing import (
 import orjson
 import yaml
 from httpx import URL, HTTPError, Response
-from orjson import JSONDecodeError as ORJSONDecodeError
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from mkutils.interval import Interval
 from mkutils.time import Duration
@@ -203,10 +202,10 @@ class Utils:
 
     # NOTE-17964d
     @staticmethod
-    def _try_validate_json_str(*, json_str: str) -> Any:
+    def try_validate_json_str[T](*, json_str: str, type_arg: type[T]) -> Union[T, str]:
         try:
-            return orjson.loads(json_str)
-        except ORJSONDecodeError:
+            return TypeAdapter(type_arg).validate_json(json_str)
+        except ValidationError:
             return json_str
 
     @classmethod
@@ -216,7 +215,7 @@ class Utils:
         except HTTPError as exc:
             response_byte_str = await response.aread()
             response_str = response_byte_str.decode(cls.ENCODING)
-            response = cls._try_validate_json_str(json_str=response_str)
+            response = cls.try_validate_json_str(json_str=response_str, type_arg=Any)
             value_error = cls.value_error(response=response)
 
             raise value_error from exc
