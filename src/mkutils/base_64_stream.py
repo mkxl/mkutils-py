@@ -6,6 +6,7 @@ from mkutils.utils import Utils
 
 @dataclasses.dataclass(kw_only=True)
 class Base64Stream:
+    DEFAULT_EXTEND_FINISH: ClassVar[bool] = False
     INITIAL_CURSOR: ClassVar[int] = 0
     CHUNK_SIZE: ClassVar[int] = 3
 
@@ -19,7 +20,7 @@ class Base64Stream:
     def length(self) -> int:
         return len(self.byte_str)
 
-    def _extend(self, *, byte_str: bytes, finish: bool) -> str:
+    def extend(self, byte_str: bytes, *, finish: bool = DEFAULT_EXTEND_FINISH) -> str:
         self.byte_str.extend(byte_str)
 
         end = self.length() if finish else Utils.largest_multiple_leq(value=self.CHUNK_SIZE, max_value=self.length())
@@ -29,8 +30,5 @@ class Base64Stream:
 
         return base_64_str
 
-    def extend(self, byte_str: bytes) -> str:
-        return self._extend(byte_str=byte_str, finish=False)
-
     def finish(self) -> str:
-        return self._extend(byte_str=b"", finish=True)
+        return self.extend(byte_str=b"", finish=True)
