@@ -114,9 +114,9 @@ class EagerQueue[T]:
     task: Task[None]
 
     @classmethod
-    def new(cls, item_iter: AsyncIterable[T]) -> Self:
+    def new(cls, item_aiter: AsyncIterable[T]) -> Self:
         queue = Queue.new()
-        task = Utils.create_task(queue.afeed, item_iter)
+        task = Utils.create_task(queue.afeed, item_aiter)
         eager_queue = cls(queue=queue, task=task)
 
         return eager_queue

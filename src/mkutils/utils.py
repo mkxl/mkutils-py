@@ -35,23 +35,25 @@ class Utils:
     ENCODING: ClassVar[str] = JsonFormatter.ENCODING
 
     @staticmethod
-    async def aconsume(value_iter: AsyncIterable[Any]) -> None:
-        async for _value in value_iter:
+    async def aconsume(value_aiter: AsyncIterable[Any]) -> None:
+        async for _value in value_aiter:
             pass
 
     @staticmethod
-    async def aintersperse[T](*, value_iter: AsyncIterable[T], filler: T) -> AsyncIterator[T]:
-        async for value in value_iter:
+    async def aintersperse[T](*, value_aiter: AsyncIterable[T], filler: T) -> AsyncIterator[T]:
+        async for value in value_aiter:
             yield value
             yield filler
 
     # NOTE: inspired by [https://stackoverflow.com/a/62309083]
     @classmethod
-    async def amerge[T](cls, *value_iters: AsyncIterable[T]) -> AsyncIterator[T]:
-        value_iter_from_anext_task = {cls._anext_task(value_iter): value_iter for value_iter in map(aiter, value_iters)}
+    async def amerge[T](cls, *value_aiters: AsyncIterable[T]) -> AsyncIterator[T]:
+        value_aiter_from_anext_task = {
+            cls._anext_task(value_aiter): value_aiter for value_aiter in map(aiter, value_aiters)
+        }
 
-        while 0 < len(value_iter_from_anext_task):  # noqa: SIM300
-            anext_tasks = value_iter_from_anext_task.keys()
+        while 0 < len(value_aiter_from_anext_task):  # noqa: SIM300
+            anext_tasks = value_aiter_from_anext_task.keys()
             completed_tasks, _pending_tasks = await cls.await_first(*anext_tasks, raise_exceptions=False)
 
             for completed_task in completed_tasks:
@@ -60,15 +62,15 @@ class Utils:
                 except StopAsyncIteration:
                     pass
                 else:
-                    value_iter = value_iter_from_anext_task[completed_task]
-                    anext_task = cls._anext_task(value_iter)
-                    value_iter_from_anext_task[anext_task] = value_iter
+                    value_aiter = value_aiter_from_anext_task[completed_task]
+                    anext_task = cls._anext_task(value_aiter)
+                    value_aiter_from_anext_task[anext_task] = value_aiter
                 finally:
-                    value_iter_from_anext_task.pop(completed_task)
+                    value_aiter_from_anext_task.pop(completed_task)
 
     @classmethod
-    def _anext_task[T](cls, value_iter: AsyncIterable[T]) -> Task[T]:
-        return cls.create_task(anext, value_iter)
+    def _anext_task[T](cls, value_aiter: AsyncIterable[T]) -> Task[T]:
+        return cls.create_task(anext, value_aiter)
 
     @staticmethod
     async def aonce[T](value: T) -> AsyncIterator[T]:
