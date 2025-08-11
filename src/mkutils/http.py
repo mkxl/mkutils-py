@@ -40,12 +40,23 @@ class HttpRequest:
     content: Optional[str]
     headers: JsonObject
 
+    # pylint: disable=too-many-arguments
     @classmethod
-    def new(cls, *, http: Http, method: HTTPMethod, url: str, query_params: Optional[JsonObject] = None) -> Self:
+    def new(
+        cls,
+        *,
+        http: Http,
+        method: HTTPMethod,
+        url: str,
+        query_params: Optional[JsonObject] = None,
+        headers: Optional[JsonObject] = None,
+    ) -> Self:
         url = Utils.url(url=url, query_params=query_params)
-        http_request = cls(http=http, method=method, url=url, content=None, headers={})
 
-        return http_request
+        if headers is None:
+            headers = {}
+
+        return cls(http=http, method=method, url=url, content=None, headers=headers)
 
     def content_type_application_json(self) -> Self:
         self.headers[self.HEADER_NAME_CONTENT_TYPE] = self.CONTENT_TYPE_APPLICATION_JSON
@@ -68,6 +79,11 @@ class HttpRequest:
             await Utils.araise_for_status(response=response)
 
             yield response
+
+    async def iter_byte_strs(self) -> AsyncIterator[bytes]:
+        async with self.stream() as response:
+            async for byte_str in response.aiter_bytes():
+                yield byte_str
 
     async def iter_lines(self) -> AsyncIterator[str]:
         async with self.stream() as response:
