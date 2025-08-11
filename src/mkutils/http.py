@@ -80,20 +80,20 @@ class HttpRequest:
 
             yield response
 
-    async def iter_byte_strs(self) -> AsyncIterator[bytes]:
+    async def aiter_byte_strs(self) -> AsyncIterator[bytes]:
         async with self.stream() as response:
             async for byte_str in response.aiter_bytes():
                 yield byte_str
 
-    async def iter_lines(self) -> AsyncIterator[str]:
+    async def aiter_lines(self) -> AsyncIterator[str]:
         async with self.stream() as response:
             async for line in response.aiter_lines():
                 yield line
 
-    async def iter_sse[T](self, *, type_arg: type[T]) -> AsyncIterator[T]:
+    async def aiter_sse[T](self, *, type_arg: type[T]) -> AsyncIterator[T]:
         type_adapter = TypeAdapter(type_arg)
 
-        async for raw_line in self.iter_lines():
+        async for raw_line in self.aiter_lines():
             if not raw_line.startswith(self.SSE_LINE_PREFIX):
                 continue
 
