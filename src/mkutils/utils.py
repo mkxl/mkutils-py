@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import functools
+import itertools
 import mimetypes
 import textwrap
 from asyncio import FIRST_COMPLETED, Future, Task
@@ -129,6 +130,10 @@ class Utils:
         text = textwrap.dedent(text)
 
         return text
+
+    @staticmethod
+    def empty[T]() -> Iterator[T]:
+        return itertools.chain()
 
     @staticmethod
     def ensure_string(string: Optional[str]) -> str:
