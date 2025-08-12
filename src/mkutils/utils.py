@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import functools
+import mimetypes
 import textwrap
 from asyncio import FIRST_COMPLETED, Future, Task
 from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Iterable, Iterator
@@ -210,6 +211,15 @@ class Utils:
     @staticmethod
     def largest_multiple_leq(*, value: int, max_value: int) -> int:
         return (max_value // value) * value
+
+    @classmethod
+    def mime_type(cls, *, filepath: str) -> str:
+        mime_type, _encoding = mimetypes.guess_file_type(filepath)
+
+        if mime_type is None:
+            raise cls.value_error(message="unable to determine mime type for file", filepath=filepath)
+
+        return mime_type
 
     @staticmethod
     def model_validate_yaml[S: BaseModel](yaml_str: str, *, type_arg: type[S]) -> S:
