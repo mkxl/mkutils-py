@@ -1,12 +1,15 @@
+import abc
 import contextlib
 from collections.abc import AsyncIterable
 from typing import Protocol
 
 
 class Sink[T](Protocol):
+    @abc.abstractmethod
     async def asend(self, value: T) -> None:
         raise NotImplementedError
 
+    @abc.abstractmethod
     async def aclose(self) -> None:
         raise NotImplementedError
 
