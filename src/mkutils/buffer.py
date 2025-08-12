@@ -36,7 +36,7 @@ class Buffer[T](Protocol):
         return value
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class ByteBuffer(Buffer[bytes]):
     byte_str: bytearray
 
