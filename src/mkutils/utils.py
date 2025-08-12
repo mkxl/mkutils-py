@@ -155,7 +155,7 @@ class Utils:
                 for parent_dirpath, _dirnames, filenames in path.walk():
                     for filename in filenames:
                         yield parent_dirpath.joinpath(filename)
-            else:
+            elif path.exists():
                 yield path
 
     @staticmethod
