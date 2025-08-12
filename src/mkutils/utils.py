@@ -213,7 +213,7 @@ class Utils:
         return (max_value // value) * value
 
     @classmethod
-    def mime_type(cls, *, filepath: str) -> str:
+    def mime_type(cls, *, filepath: Path) -> str:
         mime_type, _encoding = mimetypes.guess_file_type(filepath)
 
         if mime_type is None:
