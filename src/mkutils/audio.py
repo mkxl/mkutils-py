@@ -23,15 +23,16 @@ class AudioFormatInfo:
     key: str
     format: str
     subtype: Optional[str]
+    sample_width: Optional[int]
 
     def pair(self) -> tuple[str, Optional[str]]:
         return (self.format, self.subtype)
 
 
 class AudioFormat(Enum):
-    FLOAT = AudioFormatInfo(key="float", format="RAW", subtype="FLOAT")
-    PCM_16 = AudioFormatInfo(key="pcm_16", format="RAW", subtype="PCM_16")
-    WAV = AudioFormatInfo(key="wav", format="WAV", subtype=None)
+    FLOAT = AudioFormatInfo(key="float", format="RAW", subtype="FLOAT", sample_width=None)
+    PCM_16 = AudioFormatInfo(key="pcm_16", format="RAW", subtype="PCM_16", sample_width=2)
+    WAV = AudioFormatInfo(key="wav", format="WAV", subtype=None, sample_width=None)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
