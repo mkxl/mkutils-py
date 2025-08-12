@@ -2,6 +2,8 @@ import abc
 import dataclasses
 from typing import ClassVar, Optional, Protocol, Self
 
+from mkutils.utils import Utils
+
 
 class Buffer[T](Protocol):
     @abc.abstractmethod
@@ -56,6 +58,13 @@ class ByteBuffer(Buffer[bytes]):
 
     def slice(self, *, begin: int, end: Optional[int]) -> bytes:
         byte_str = self.byte_str[begin:end]
+        byte_str = bytes(byte_str)
+
+        return byte_str
+
+    def pop_left(self, *, chunk_size: int) -> bytes:
+        index = Utils.largest_multiple_leq(value=chunk_size, max_value=self.len())
+        byte_str, self.byte_str = Utils.split(value=self.byte_str, index=index)
         byte_str = bytes(byte_str)
 
         return byte_str

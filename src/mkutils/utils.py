@@ -94,6 +94,18 @@ class Utils:
         for value in value_iter:
             yield value
 
+    @classmethod
+    async def araise_for_status(cls, *, response: Response) -> None:
+        try:
+            response.raise_for_status()
+        except HTTPError as exc:
+            response_byte_str = await response.aread()
+            response_str = response_byte_str.decode(cls.ENCODING)
+            response = cls.try_validate_json_str(json_str=response_str, type_arg=Any)
+            value_error = cls.value_error(response=response)
+
+            raise value_error from exc
+
     @staticmethod
     async def await_first[T](
         *awaitables: Awaitable[T], raise_exceptions: bool = True
@@ -237,6 +249,14 @@ class Utils:
     def once[T](value: T) -> Iterator[T]:
         yield value
 
+    @staticmethod
+    def split[T](*, value: T, index: int) -> tuple[T, T]:
+        left = value[:index]  # ty: ignore[non-subscriptable]
+        right = value[index:]  # ty: ignore[non-subscriptable]
+        pair = (left, right)
+
+        return pair
+
     # NOTE-17964d
     @staticmethod
     def try_validate_json_str[T](*, json_str: str, type_arg: type[T]) -> Union[T, str]:
@@ -244,18 +264,6 @@ class Utils:
             return TypeAdapter(type_arg).validate_json(json_str)
         except ValidationError:
             return json_str
-
-    @classmethod
-    async def araise_for_status(cls, *, response: Response) -> None:
-        try:
-            response.raise_for_status()
-        except HTTPError as exc:
-            response_byte_str = await response.aread()
-            response_str = response_byte_str.decode(cls.ENCODING)
-            response = cls.try_validate_json_str(json_str=response_str, type_arg=Any)
-            value_error = cls.value_error(response=response)
-
-            raise value_error from exc
 
     @staticmethod
     def to_sync_fn[T, **P](async_fn: AsyncFunction[P, T]) -> SyncFunction[P, T]:

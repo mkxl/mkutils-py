@@ -1,5 +1,5 @@
 from mkutils.audio import Audio, AudioFormat, AudioFormatInfo, AudioInfo
-from mkutils.b64_stream import B64Chunk, B64Stream, ChunkedByteBuffer
+from mkutils.b64_stream import B64Chunk, B64Stream
 from mkutils.buffer import Buffer, ByteBuffer, StringBuffer
 from mkutils.cli import Cli
 from mkutils.enum import Enum
@@ -24,7 +24,6 @@ __all__: list[str] = [
     "B64Stream",
     "Buffer",
     "ByteBuffer",
-    "ChunkedByteBuffer",
     "Cli",
     "Datetime",
     "Dtype",
