@@ -4,6 +4,7 @@ import functools
 import textwrap
 from asyncio import FIRST_COMPLETED, Future, Task
 from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Iterable, Iterator
+from pathlib import Path
 from typing import (
     Any,
     ClassVar,
@@ -38,6 +39,16 @@ class Utils:
     async def aconsume(value_aiter: AsyncIterable[Any]) -> None:
         async for _value in value_aiter:
             pass
+
+    @staticmethod
+    def add_opt[T](left: Optional[T], right: Optional[T]) -> Optional[T]:
+        if left is None:
+            return right
+
+        if right is None:
+            return left
+
+        return left + right  # ty: ignore[unsupported-operator]
 
     @staticmethod
     async def aintersperse[T](*, value_aiter: AsyncIterable[T], filler: T) -> AsyncIterator[T]:
@@ -133,6 +144,19 @@ class Utils:
         #   [https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.get_event_loop]
         return asyncio.get_running_loop().create_future()
 
+    @classmethod
+    def iter_filepaths(cls, paths: Union[Path, Iterable[Path]]) -> Iterator[Path]:
+        if isinstance(paths, Path):
+            paths = cls.once(paths)
+
+        for path in paths:
+            if path.is_dir():
+                for parent_dirpath, _dirnames, filenames in path.walk():
+                    for filename in filenames:
+                        yield parent_dirpath.joinpath(filename)
+            else:
+                yield path
+
     @staticmethod
     def iter_intervals(*, begin: int, total: int, chunk_size: int, exact: bool) -> Iterator[Interval[int]]:
         endpoint_range = range(begin, total, chunk_size)
@@ -153,16 +177,6 @@ class Utils:
     @staticmethod
     def is_not_none_and_is_nonempty(text: Optional[str]) -> TypeGuard[str]:
         return text is not None and text != ""
-
-    @staticmethod
-    def add_opt[T](left: Optional[T], right: Optional[T]) -> Optional[T]:
-        if left is None:
-            return right
-
-        if right is None:
-            return left
-
-        return left + right  # ty: ignore[unsupported-operator]
 
     @classmethod
     def json_dump(cls, value: BaseModel) -> JsonObject:
@@ -203,6 +217,10 @@ class Utils:
         base_model = TypeAdapter(type_arg).validate_python(value)
 
         return base_model
+
+    @staticmethod
+    def once[T](value: T) -> Iterator[T]:
+        yield value
 
     # NOTE-17964d
     @staticmethod
