@@ -12,6 +12,7 @@ import torchaudio
 from pydub import AudioSegment
 
 from mkutils.enum import Enum
+from mkutils.time import Duration
 from mkutils.typing import JsonObject
 from mkutils.utils import Shape, Utils
 
@@ -188,3 +189,9 @@ class Audio:
         await asyncio.to_thread(
             sounddevice.play, data=self.data, samplerate=self.sample_rate, blocking=self.BLOCK_ON_PLAY
         )
+
+    def duration(self) -> Duration:
+        seconds = self.num_frames() / self.sample_rate
+        duration = Duration.new(seconds=seconds)
+
+        return duration
