@@ -61,7 +61,7 @@ from mkutils.utils import Utils
 #         return self.head.get_loop()
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class Queue[T](Sink[T]):
     APPEND_ITEM_ERROR_MESSAGE: ClassVar[str] = "unable to append item because the queue is closed"
     INITIAL_IS_CLOSED: ClassVar[bool] = False
