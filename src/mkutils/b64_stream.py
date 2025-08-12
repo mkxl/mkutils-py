@@ -18,7 +18,7 @@ class B64Chunk:
         return b64_chunk
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class B64Stream:
     DEFAULT_EXTEND_FINISH: ClassVar[bool] = False
     INITIAL_CURSOR: ClassVar[int] = 0
