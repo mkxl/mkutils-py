@@ -61,7 +61,7 @@ class ByteBuffer(Buffer[bytes]):
         return byte_str
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class StringBuffer(Buffer[str]):
     INITAL_LENGTH: ClassVar[int] = 0
 
