@@ -237,6 +237,7 @@ class Logger:
         cls,
         *,
         level: Level = DEFAULT_LEVEL,
+        primary_file: Optional[TextIO] = None,
         debug_file: Optional[TextIO] = None,
         include_spans: bool = DEFAULT_INCLUDE_SPANS,
         populate_message: bool = DEFAULT_POPULATE_MESSAGE,
@@ -247,7 +248,7 @@ class Logger:
 
         std_logger.setLevel(min_level.level)
         cls._remove_handlers(std_logger=std_logger)
-        cls._add_handler(std_logger=std_logger, json_formatter=json_formatter, stream=None, level=level)
+        cls._add_handler(std_logger=std_logger, json_formatter=json_formatter, stream=primary_file, level=level)
 
         if debug_file is not None:
             cls._add_handler(std_logger=std_logger, json_formatter=json_formatter, stream=debug_file, level=min_level)
