@@ -11,7 +11,7 @@ from mkutils.sink import Sink
 logger: Logger = Logger.new(__name__)
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Process(Sink[bytes]):
     READ_SIZE: ClassVar[int] = 2**24
 

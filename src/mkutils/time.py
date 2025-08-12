@@ -7,7 +7,7 @@ from datetime import UTC
 from typing import ClassVar, Self
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Datetime:
     std_datetime: datetime.datetime
 
@@ -22,7 +22,7 @@ class Datetime:
         return Duration.new(seconds=self.std_datetime.timestamp())
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Duration:
     DEFAULT_SECONDS: ClassVar[float] = 0.0
     DEFAULT_MILLISECONDS: ClassVar[int] = 0

@@ -17,7 +17,7 @@ from mkutils.utils import Shape, Utils
 
 
 @Utils.keyed_by(attr="key")
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AudioFormatInfo:
     key: str
     format: str
@@ -33,7 +33,7 @@ class AudioFormat(Enum):
     WAV = AudioFormatInfo(key="wav", format="WAV", subtype=None)
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AudioInfo:
     sample_rate: int
     num_channels: int
@@ -52,7 +52,7 @@ class AudioInfo:
         return (self.sample_rate, self.num_channels)
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Audio:
     ALWAYS_2D: ClassVar[bool] = True
     AXIS_CHANNELS: ClassVar[int] = 1

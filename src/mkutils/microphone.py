@@ -19,7 +19,7 @@ logger: Logger = Logger.new(__name__)
 
 
 @Utils.keyed_by(attr="key")
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DtypeInfo:
     key: str
     audio_format: AudioFormat
@@ -31,7 +31,7 @@ class Dtype(Enum):
 
 
 # NOTE: inspired by: [https://python-sounddevice.readthedocs.io/en/0.5.1/examples.html#creating-an-asyncio-generator-for-audio-blocks]  # pylint: disable=line-too-long  # noqa: E501
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Microphone:
     DEFAULT_DEVICE: ClassVar[int] = 0
     DEFAULT_DTYPE: ClassVar[Dtype] = Dtype.FLOAT_32

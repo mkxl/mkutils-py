@@ -102,7 +102,7 @@ class JsonFormatter(StdFormatter):
         return self.dumps(json_obj)
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Logger:
     CONTEXT_VAR: ClassVar[ContextVar[JsonObject]] = ContextVar(
         "logger",

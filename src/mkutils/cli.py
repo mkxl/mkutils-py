@@ -8,7 +8,7 @@ from mkutils.typing import Function, SyncFunction
 from mkutils.utils import Utils
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Cli:
     DEFAULT_PRETTY_EXCEPTIONS_ENABLE: ClassVar[bool] = False
 

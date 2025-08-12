@@ -15,7 +15,7 @@ from mkutils.utils import Utils
 logger: Logger = Logger.new(__name__)
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Http:
     client: AsyncClient
 
@@ -26,7 +26,7 @@ class Http:
             yield cls(client=client)
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class HttpRequest:
     HEADER_NAME_CONTENT_TYPE: ClassVar[str] = "content-type"
     HEADER_NAME_AUTHORIZATION: ClassVar[str] = "authorization"

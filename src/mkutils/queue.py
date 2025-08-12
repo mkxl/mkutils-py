@@ -12,7 +12,7 @@ from mkutils.utils import Utils
 # - prefer this implementation over the hume __await__ based one because of
 #   [https://stackoverflow.com/a/63966273]
 # - NOTE-b68740: maintains invariant that if [self.head] is pending then [self.tail] is empty
-# @dataclasses.dataclass(kw_only=True)
+# @dataclasses.dataclass(frozen=True, kw_only=True)
 # class Queue[T](Sink[T]):
 #     APPEND_ITEM_ERROR_MESSAGE: ClassVar[str] = "unable to send value because the queue is closed"
 #     INITIAL_IS_CLOSED: ClassVar[bool] = False
@@ -61,7 +61,7 @@ from mkutils.utils import Utils
 #         return self.head.get_loop()
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Queue[T](Sink[T]):
     APPEND_ITEM_ERROR_MESSAGE: ClassVar[str] = "unable to append item because the queue is closed"
     INITIAL_IS_CLOSED: ClassVar[bool] = False
@@ -108,7 +108,7 @@ class Queue[T](Sink[T]):
 
 # NOTE: for cases where i want to start aggregating/collecting results right now, but i want to actually iterate and
 # process them later, but i don't want to wait for the aggregation to finish before i can start iterating and processing
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class EagerQueue[T]:
     queue: Queue[T]
     task: Task[None]
@@ -135,7 +135,7 @@ class EagerQueue[T]:
 # NOTE:
 # - all created tasks are run simultaneously (as a result of calling [asyncio.create_Task])
 # - but they're yielded in the order added
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class TaskQueue[T]:
     task_queue: Queue[Task[T]]
 
