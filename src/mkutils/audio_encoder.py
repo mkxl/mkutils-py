@@ -46,19 +46,19 @@ class WavAudioEncoder(AudioEncoder):
         )
 
     def _wav_byte_buffer(self, *, audio_info: AudioInfo) -> ByteBuffer:
+        # NOTE: per [https://docs.python.org/3/library/wave.html#wave.Wave_write], wave_write.writeframes() and
+        # wave_write.close() will correct the number of frames in the header which is undesired
         bytes_io = BytesIO()
         num_frames = self.header_duration.sample_index(sample_rate=audio_info.sample_rate)
+        wave_write = wave.open(bytes_io, "wb")  # noqa: SIM115
 
-        # NOTE: [https://docs.python.org/3/library/wave.html#wave.Wave_write], wave_write.writeframes() and
-        # wave_write.close() will correct the number of frames in the header
-        with wave.open(bytes_io, "wb") as wave_write:
-            wave_write.setnframes(num_frames)  # pylint: disable=no-member
-            wave_write.setnchannels(audio_info.num_channels)  # pylint: disable=no-member
-            wave_write.setsampwidth(self.pcm_audio_format.value.pcm_sample_width)  # pylint: disable=no-member
-            wave_write.setframerate(audio_info.sample_rate)  # pylint: disable=no-member
-            wave_write.writeframesraw(b"")  # pylint: disable=no-member
+        wave_write.setnframes(num_frames)  # pylint: disable=no-member
+        wave_write.setnchannels(audio_info.num_channels)  # pylint: disable=no-member
+        wave_write.setsampwidth(self.pcm_audio_format.value.pcm_sample_width)  # pylint: disable=no-member
+        wave_write.setframerate(audio_info.sample_rate)  # pylint: disable=no-member
+        wave_write.writeframesraw(b"")  # pylint: disable=no-member
 
-            return ByteBuffer.new(byte_str=bytes_io.getvalue())
+        return ByteBuffer.new(byte_str=bytes_io.getvalue())
 
     def push(self, *, audio: Audio, finish: bool) -> bytes:
         pcm_byte_str = audio.byte_str(audio_format=self.pcm_audio_format)
