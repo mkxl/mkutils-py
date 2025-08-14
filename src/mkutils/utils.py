@@ -126,6 +126,10 @@ class Utils:
         return pair
 
     @classmethod
+    def b64decode(cls, b64_str: str) -> bytes:
+        return base64.b64decode(b64_str)
+
+    @classmethod
     def b64encode(cls, byte_str: bytes) -> str:
         return base64.b64encode(byte_str).decode(encoding=cls.ENCODING)
 
