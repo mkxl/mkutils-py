@@ -1,5 +1,5 @@
 from mkutils.audio import Audio, AudioFormat, AudioFormatInfo, AudioInfo
-from mkutils.audio_encoder import AudioEncoder
+from mkutils.audio_encoder import AudioEncoder, Mp3AudioEncoder, PcmAudioEncoder, WavAudioEncoder
 from mkutils.b64_stream import B64Chunk, B64Stream
 from mkutils.buffer import Buffer, ByteBuffer, StringBuffer
 from mkutils.cli import Cli
@@ -42,6 +42,8 @@ __all__: list[str] = [
     "Level",
     "Logger",
     "Microphone",
+    "Mp3AudioEncoder",
+    "PcmAudioEncoder",
     "Process",
     "Queue",
     "Shape",
@@ -50,4 +52,5 @@ __all__: list[str] = [
     "SyncFunction",
     "TaskQueue",
     "Utils",
+    "WavAudioEncoder",
 ]

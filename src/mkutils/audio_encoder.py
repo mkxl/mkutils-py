@@ -75,7 +75,7 @@ class WavAudioEncoder(AudioEncoder):
 
 
 @dataclasses.dataclass(kw_only=True)
-class MP3AudioEncoder(AudioEncoder):
+class Mp3AudioEncoder(AudioEncoder):
     BIT_RATE: ClassVar[int] = 128
     QUALITY: ClassVar[int] = 2
     INITIAL_LAME_ENCODER_IS_CONFIGURED: ClassVar[bool] = False
