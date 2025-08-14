@@ -31,8 +31,9 @@ class AudioFormatInfo:
 
 class AudioFormat(Enum):
     FLOAT = AudioFormatInfo(key="float", format="RAW", subtype="FLOAT", pcm_sample_width=None)
-    PCM_16 = AudioFormatInfo(key="pcm_16", format="RAW", subtype="PCM_16", pcm_sample_width=2)
+    PCM_16 = AudioFormatInfo(key="pcm_s16le", format="RAW", subtype="PCM_16", pcm_sample_width=2)
     WAV = AudioFormatInfo(key="wav", format="WAV", subtype=None, pcm_sample_width=None)
+    MP3 = AudioFormatInfo(key="mp3", format="MP3", subtype=None, pcm_sample_width=None)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
