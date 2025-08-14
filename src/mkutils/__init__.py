@@ -1,4 +1,5 @@
 from mkutils.audio import Audio, AudioFormat, AudioFormatInfo, AudioInfo
+from mkutils.audio_encoder import AudioEncoder
 from mkutils.b64_stream import B64Chunk, B64Stream
 from mkutils.buffer import Buffer, ByteBuffer, StringBuffer
 from mkutils.cli import Cli
@@ -17,6 +18,7 @@ from mkutils.utils import Shape, Utils
 __all__: list[str] = [
     "AsyncFunction",
     "Audio",
+    "AudioEncoder",
     "AudioFormat",
     "AudioFormatInfo",
     "AudioInfo",
