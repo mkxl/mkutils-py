@@ -31,19 +31,15 @@ class PcmAudioEncoder(AudioEncoder):
 
 @dataclasses.dataclass(kw_only=True)
 class WavAudioEncoder(AudioEncoder):
+    PCM_AUDIO_FORMAT: ClassVar[AudioFormat] = AudioFormat.PCM_FLOAT_32
     INITIAL_YIELDED_HEADER: ClassVar[bool] = False
 
-    pcm_audio_format: AudioFormat
     header_duration: Duration
     yielded_header: bool
 
     @classmethod
-    def new(cls, *, pcm_audio_format: AudioFormat, header_duration: Duration) -> Self:
-        return cls(
-            pcm_audio_format=pcm_audio_format,
-            header_duration=header_duration,
-            yielded_header=cls.INITIAL_YIELDED_HEADER,
-        )
+    def new(cls, *, header_duration: Duration) -> Self:
+        return cls(header_duration=header_duration, yielded_header=cls.INITIAL_YIELDED_HEADER)
 
     def _wav_byte_buffer(self, *, audio_info: AudioInfo) -> ByteBuffer:
         # NOTE: per [https://docs.python.org/3/library/wave.html#wave.Wave_write], wave_write.writeframes() and
@@ -54,14 +50,14 @@ class WavAudioEncoder(AudioEncoder):
 
         wave_write.setnframes(num_frames)  # pylint: disable=no-member
         wave_write.setnchannels(audio_info.num_channels)  # pylint: disable=no-member
-        wave_write.setsampwidth(self.pcm_audio_format.value.pcm_sample_width)  # pylint: disable=no-member
+        wave_write.setsampwidth(self.PCM_AUDIO_FORMAT.value.pcm_sample_width)  # pylint: disable=no-member
         wave_write.setframerate(audio_info.sample_rate)  # pylint: disable=no-member
         wave_write.writeframesraw(b"")  # pylint: disable=no-member
 
         return ByteBuffer.new(byte_str=bytes_io.getvalue())
 
     def push(self, *, audio: Audio, finish: bool) -> bytes:
-        pcm_byte_str = audio.byte_str(audio_format=self.pcm_audio_format)
+        pcm_byte_str = audio.byte_str(audio_format=self.PCM_AUDIO_FORMAT)
 
         if self.yielded_header:
             return pcm_byte_str
