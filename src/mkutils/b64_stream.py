@@ -35,7 +35,7 @@ class B64Stream:
     def len(self) -> int:
         return self.byte_buffer.len()
 
-    def extend(self, byte_str: bytes, *, finish: bool = DEFAULT_EXTEND_FINISH) -> B64Chunk:
+    def extend(self, *, byte_str: bytes, finish: bool = DEFAULT_EXTEND_FINISH) -> B64Chunk:
         self.byte_buffer.push(byte_str)
 
         end = self.len() if finish else Utils.largest_multiple_leq(value=self.CHUNK_SIZE, max_value=self.len())
@@ -48,7 +48,7 @@ class B64Stream:
         return b64_chunk
 
     def finish(self) -> B64Chunk:
-        return self.extend(b"", finish=True)
+        return self.extend(byte_str=b"", finish=True)
 
     def string(self) -> str:
         return self.b64_string.value()
