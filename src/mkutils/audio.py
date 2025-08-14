@@ -30,8 +30,8 @@ class AudioFormatInfo:
 
 
 class AudioFormat(Enum):
-    PCM_FLOAT_32 = AudioFormatInfo(key="float", format="RAW", subtype="FLOAT", pcm_sample_width=4)
-    PCM_FLOAT_64 = AudioFormatInfo(key="double", format="RAW", subtype="DOUBLE", pcm_sample_width=8)
+    PCM_FLOAT_32 = AudioFormatInfo(key="pcm_float_32", format="RAW", subtype="FLOAT", pcm_sample_width=4)
+    PCM_FLOAT_64 = AudioFormatInfo(key="pcm_float_64", format="RAW", subtype="DOUBLE", pcm_sample_width=8)
     PCM_S16LE = AudioFormatInfo(key="pcm_s16le", format="RAW", subtype="PCM_16", pcm_sample_width=2)
     WAV = AudioFormatInfo(key="wav", format="WAV", subtype=None, pcm_sample_width=None)
     MP3 = AudioFormatInfo(key="mp3", format="MP3", subtype=None, pcm_sample_width=None)
