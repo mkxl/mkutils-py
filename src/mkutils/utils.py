@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import dataclasses
 import functools
 import itertools
 import mimetypes
@@ -11,6 +12,7 @@ from typing import (
     Any,
     ClassVar,
     Optional,
+    Self,
     TypeGuard,
     Union,
 )
@@ -33,9 +35,27 @@ class Shape:
         self.shape = shape
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class Item[T]:
+    IS_FIRST_INDEX: ClassVar[int] = 0
+
+    index: int
+    value: T
+    is_first: bool
+    is_last: bool
+
+    @classmethod
+    def new(cls, *, index: int, value: T, is_last: bool) -> Self:
+        is_first = index == cls.IS_FIRST_INDEX
+        item = cls(index=index, value=value, is_first=is_first, is_last=is_last)
+
+        return item
+
+
 # pylint: disable=too-many-public-methods
 class Utils:
     ENCODING: ClassVar[str] = JsonFormatter.ENCODING
+    SENTINEL: ClassVar[object] = object()
 
     @staticmethod
     async def aconsume(value_aiter: AsyncIterable[Any]) -> None:
@@ -57,6 +77,22 @@ class Utils:
         async for value in value_aiter:
             yield value
             yield filler
+
+    # NOTE-5bfda6
+    @classmethod
+    async def aiter_items[T](cls, value_aiter: AsyncIterable[T]) -> AsyncIterator[Item[T]]:
+        value_aiter = aiter(value_aiter)
+        prev_value = await anext(value_aiter, cls.SENTINEL)
+        index = 0
+
+        async for next_value in value_aiter:
+            yield Item.new(index=index, value=prev_value, is_last=False)
+
+            prev_value = next_value
+            index += 1
+
+        if prev_value is not cls.SENTINEL:
+            yield Item.new(index=index, value=prev_value, is_last=True)
 
     # NOTE: inspired by [https://stackoverflow.com/a/62309083]
     @classmethod
@@ -195,6 +231,22 @@ class Utils:
 
         if not exact and interval_begin != total:
             yield Interval[int](begin=interval_begin, end=total)
+
+    # NOTE-5bfda6: source of truth implementation
+    @classmethod
+    def iter_items[T](cls, value_iter: Iterable[T]) -> Iterator[Item[T]]:
+        value_iter = iter(value_iter)
+        prev_value = next(value_iter, cls.SENTINEL)
+        index = 0
+
+        for next_value in value_iter:
+            yield Item.new(index=index, value=prev_value, is_last=False)
+
+            prev_value = next_value
+            index += 1
+
+        if prev_value is not cls.SENTINEL:
+            yield Item.new(index=index, value=prev_value, is_last=True)
 
     @staticmethod
     def is_not_none_and_is_nonempty(text: Optional[str]) -> TypeGuard[str]:

@@ -13,7 +13,7 @@ from mkutils.queue import EagerQueue, Queue, TaskQueue
 from mkutils.sink import Sink
 from mkutils.time import Datetime, Duration
 from mkutils.typing import AsyncFunction, Function, JsonObject, SyncFunction
-from mkutils.utils import Shape, Utils
+from mkutils.utils import Item, Shape, Utils
 
 __all__: list[str] = [
     "AsyncFunction",
@@ -37,6 +37,7 @@ __all__: list[str] = [
     "Http",
     "HttpRequest",
     "Interval",
+    "Item",
     "JsonFormatter",
     "JsonObject",
     "Level",
