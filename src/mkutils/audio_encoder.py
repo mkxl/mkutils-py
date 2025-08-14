@@ -81,15 +81,13 @@ class Mp3AudioEncoder(AudioEncoder):
     INITIAL_LAME_ENCODER_IS_CONFIGURED: ClassVar[bool] = False
     INITIAL_IS_EMPTY: ClassVar[bool] = True
 
-    pcm_audio_format: AudioFormat
     lame_encoder: LameEncoder
     lame_encoder_is_configured: bool
     is_empty: bool
 
     @classmethod
-    def new(cls, *, pcm_audio_format: AudioFormat) -> Self:
+    def new(cls) -> Self:
         return cls(
-            pcm_audio_format=pcm_audio_format,
             lame_encoder=cls._lame_encoder(),
             lame_encoder_is_configured=cls.INITIAL_LAME_ENCODER_IS_CONFIGURED,
             is_empty=cls.INITIAL_IS_EMPTY,
@@ -111,8 +109,8 @@ class Mp3AudioEncoder(AudioEncoder):
         self.lame_encoder_is_configured = True
 
     def _push(self, *, audio: Audio) -> bytes:
-        pcm_byte_str = audio.byte_str(audio_format=self.pcm_audio_format)
-        mp3_byte_str = self.lame_encoder.encode(pcm_byte_str)
+        pcm_s16le_byte_str = audio.byte_str(audio_format=AudioFormat.PCM_S16LE)
+        mp3_byte_str = self.lame_encoder.encode(pcm_s16le_byte_str)
         self.is_empty &= audio.is_empty()
 
         return mp3_byte_str
