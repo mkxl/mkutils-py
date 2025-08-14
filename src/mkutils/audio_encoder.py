@@ -31,7 +31,7 @@ class PcmAudioEncoder(AudioEncoder):
 
 @dataclasses.dataclass(kw_only=True)
 class WavAudioEncoder(AudioEncoder):
-    PCM_AUDIO_FORMAT: ClassVar[AudioFormat] = AudioFormat.PCM_FLOAT_32
+    PCM_AUDIO_FORMAT: ClassVar[AudioFormat] = AudioFormat.PCM_S16LE
     INITIAL_YIELDED_HEADER: ClassVar[bool] = False
 
     header_duration: Duration
