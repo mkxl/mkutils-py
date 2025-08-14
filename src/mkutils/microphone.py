@@ -26,7 +26,7 @@ class DtypeInfo:
 
 
 class Dtype(Enum):
-    INT_16 = DtypeInfo(key="int16", audio_format=AudioFormat.PCM_16)
+    INT_16 = DtypeInfo(key="int16", audio_format=AudioFormat.PCM_S16LE)
     FLOAT_32 = DtypeInfo(key="float32", audio_format=AudioFormat.FLOAT)
 
 

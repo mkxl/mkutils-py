@@ -38,34 +38,39 @@ class Buffer[T](Protocol):
 
 @dataclasses.dataclass(kw_only=True)
 class ByteBuffer(Buffer[bytes]):
-    byte_str: bytearray
+    DEFAULT_BYTE_STR: ClassVar[bytes] = b""
+
+    byte_array: bytearray
 
     @classmethod
-    def new(cls) -> Self:
-        return cls(byte_str=bytearray())
+    def new(cls, *, byte_str: bytes = DEFAULT_BYTE_STR) -> Self:
+        byte_array = bytearray(byte_str)
+        byte_buffer = cls(byte_array=byte_array)
+
+        return byte_buffer
 
     def len(self) -> int:
-        return len(self.byte_str)
+        return len(self.byte_array)
 
     def reset(self) -> None:
-        return self.byte_str.clear()
+        return self.byte_array.clear()
 
     def value(self) -> bytes:
-        return bytes(self.byte_str)
+        return bytes(self.byte_array)
 
     def push(self, value: bytes) -> None:
-        self.byte_str.extend(value)
+        self.byte_array.extend(value)
 
     def slice(self, *, begin: int, end: Optional[int]) -> bytes:
-        byte_str = self.byte_str[begin:end]
-        byte_str = bytes(byte_str)
+        byte_array = self.byte_array[begin:end]
+        byte_str = bytes(byte_array)
 
         return byte_str
 
     def pop_left(self, *, chunk_size: int) -> bytes:
         index = Utils.largest_multiple_leq(value=chunk_size, max_value=self.len())
-        byte_str, self.byte_str = Utils.split(value=self.byte_str, index=index)
-        byte_str = bytes(byte_str)
+        byte_array, self.byte_array = Utils.split(value=self.byte_array, index=index)
+        byte_str = bytes(byte_array)
 
         return byte_str
 

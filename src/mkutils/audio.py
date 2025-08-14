@@ -30,8 +30,9 @@ class AudioFormatInfo:
 
 
 class AudioFormat(Enum):
-    FLOAT = AudioFormatInfo(key="float", format="RAW", subtype="FLOAT", pcm_sample_width=None)
-    PCM_16 = AudioFormatInfo(key="pcm_s16le", format="RAW", subtype="PCM_16", pcm_sample_width=2)
+    FLOAT = AudioFormatInfo(key="float", format="RAW", subtype="FLOAT", pcm_sample_width=4)
+    DOUBLE = AudioFormatInfo(key="double", format="RAW", subtype="DOUBLE", pcm_sample_width=8)
+    PCM_S16LE = AudioFormatInfo(key="pcm_s16le", format="RAW", subtype="PCM_16", pcm_sample_width=2)
     WAV = AudioFormatInfo(key="wav", format="WAV", subtype=None, pcm_sample_width=None)
     MP3 = AudioFormatInfo(key="mp3", format="MP3", subtype=None, pcm_sample_width=None)
 
@@ -55,13 +56,12 @@ class AudioInfo:
         return (self.sample_rate, self.num_channels)
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(kw_only=True)
 class Audio:
     ALWAYS_2D: ClassVar[bool] = True
     AXIS_CHANNELS: ClassVar[int] = 1
     AXIS_FRAMES: ClassVar[int] = 0
     BLOCK_ON_PLAY: ClassVar[bool] = True
-    SAMPLE_WIDTH_PCM_16: ClassVar[int] = 2
 
     data: Annotated[numpy.ndarray, Shape("F,C")]
     sample_rate: int
@@ -112,6 +112,12 @@ class Audio:
         audio = cls.from_values(data=data, sample_rate=first_audio.sample_rate)
 
         return audio
+
+    def is_empty(self) -> bool:
+        return self.num_frames() == 0
+
+    def is_nonempty(self) -> bool:
+        return not self.is_empty()
 
     # NOTE-37cb5e
     def add(self, other: Self) -> None:
@@ -180,9 +186,12 @@ class Audio:
         return bytes_io.getvalue()
 
     def segment(self) -> AudioSegment:
-        data = self.byte_str(audio_format=AudioFormat.PCM_16)
+        data = self.byte_str(audio_format=AudioFormat.PCM_S16LE)
         audio_segment = AudioSegment(
-            data=data, sample_width=self.SAMPLE_WIDTH_PCM_16, frame_rate=self.sample_rate, channels=self.num_channels()
+            data=data,
+            sample_width=AudioFormat.PCM_S16LE.value.pcm_sample_width,
+            frame_rate=self.sample_rate,
+            channels=self.num_channels(),
         )
 
         return audio_segment

@@ -24,6 +24,8 @@ class Datetime:
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Duration:
+    DEFAULT_HOURS: ClassVar[int] = 0
+    DEFAULT_MINUTES: ClassVar[int] = 0
     DEFAULT_SECONDS: ClassVar[float] = 0.0
     DEFAULT_MILLISECONDS: ClassVar[int] = 0
     MILLISECONDS_PER_SECOND: ClassVar[int] = 1000
@@ -32,8 +34,15 @@ class Duration:
     timedelta: datetime.timedelta
 
     @classmethod
-    def new(cls, *, seconds: float = DEFAULT_SECONDS, milliseconds: int = DEFAULT_MILLISECONDS) -> Self:
-        timedelta = datetime.timedelta(seconds=seconds, milliseconds=milliseconds)
+    def new(
+        cls,
+        *,
+        hours: int = DEFAULT_HOURS,
+        minutes: int = DEFAULT_MINUTES,
+        seconds: float = DEFAULT_SECONDS,
+        milliseconds: int = DEFAULT_MILLISECONDS,
+    ) -> Self:
+        timedelta = datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
         duration = cls(timedelta=timedelta)
 
         return duration
