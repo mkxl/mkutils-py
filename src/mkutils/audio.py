@@ -28,6 +28,9 @@ class AudioFormatInfo:
     def pair(self) -> tuple[str, Optional[str]]:
         return (self.format, self.subtype)
 
+    def pcm_sample_width_with(self, *, default: int) -> int:
+        return default if self.pcm_sample_width is None else self.pcm_sample_width
+
 
 class AudioFormat(Enum):
     PCM_FLOAT_32 = AudioFormatInfo(key="pcm_float_32", format="RAW", subtype="FLOAT", pcm_sample_width=4)

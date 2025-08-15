@@ -101,21 +101,25 @@ class Utils:
             cls._anext_task(value_aiter): value_aiter for value_aiter in map(aiter, value_aiters)
         }
 
+        # NOTE: cancel_pending_tasks can safely be set to False because this while loop doesn't terminate until all
+        # tasks are complete
         while 0 < len(value_aiter_from_anext_task):  # noqa: SIM300
             anext_tasks = value_aiter_from_anext_task.keys()
-            completed_tasks, _pending_tasks = await cls.await_first(*anext_tasks, raise_exceptions=False)
+            completed_anext_tasks, _pending_anext_tasks = await cls.await_first(
+                *anext_tasks, raise_exceptions=False, cancel_pending_tasks=False
+            )
 
-            for completed_task in completed_tasks:
+            for completed_anext_task in completed_anext_tasks:
                 try:
-                    yield completed_task.result()
+                    yield completed_anext_task.result()
                 except StopAsyncIteration:
                     pass
                 else:
-                    value_aiter = value_aiter_from_anext_task[completed_task]
+                    value_aiter = value_aiter_from_anext_task[completed_anext_task]
                     anext_task = cls._anext_task(value_aiter)
                     value_aiter_from_anext_task[anext_task] = value_aiter
                 finally:
-                    value_aiter_from_anext_task.pop(completed_task)
+                    value_aiter_from_anext_task.pop(completed_anext_task)
 
     @classmethod
     def _anext_task[T](cls, value_aiter: AsyncIterable[T]) -> Task[T]:
@@ -144,20 +148,24 @@ class Utils:
 
     @staticmethod
     async def await_first[T](
-        *awaitables: Awaitable[T], raise_exceptions: bool = True
+        *awaitables: Awaitable[T], raise_exceptions: bool, cancel_pending_tasks: bool
     ) -> tuple[set[Task[T]], set[Task[T]]]:
         # NOTE: can't use a generator here
         tasks = [
             awaitable if isinstance(awaitable, Task) else asyncio.create_task(awaitable) for awaitable in awaitables
         ]
-        completed_tasks, _pending_tasks = pair = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
+        completed_tasks, pending_tasks = pair = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
 
         if raise_exceptions:
-            for task in completed_tasks:
-                exception = task.exception()
+            for completed_task in completed_tasks:
+                exception = completed_task.exception()
 
                 if exception is not None:
                     raise exception
+
+        if cancel_pending_tasks:
+            for pending_task in pending_tasks:
+                pending_task.cancel()
 
         return pair
 
