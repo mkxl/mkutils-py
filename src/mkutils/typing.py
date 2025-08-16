@@ -1,6 +1,7 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, Union
 
+type ByteStr = Union[bytes, bytearray]
 type JsonObject = dict[str, Any]
 type SyncFunction[X, Y] = Callable[[X], Y]
 type AsyncFunction[X, Y] = SyncFunction[X, Coroutine[Any, Any, Y]]

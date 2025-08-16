@@ -7,7 +7,7 @@ from typing import ClassVar, Protocol, Self
 from lameenc import Encoder as LameEncoder  # ty: ignore[unresolved-import]  pylint: disable=no-name-in-module
 
 from mkutils.audio import Audio, AudioFormat, AudioInfo
-from mkutils.buffer import ByteBuffer
+from mkutils.buffer import Buffer
 from mkutils.time import Duration
 
 
@@ -41,7 +41,7 @@ class WavAudioEncoder(AudioEncoder):
     def new(cls, *, header_duration: Duration) -> Self:
         return cls(header_duration=header_duration, yielded_header=cls.INITIAL_YIELDED_HEADER)
 
-    def _wav_byte_buffer(self, *, audio_info: AudioInfo) -> ByteBuffer:
+    def _wav_buffer(self, *, audio_info: AudioInfo) -> Buffer:
         # NOTE: per [https://docs.python.org/3/library/wave.html#wave.Wave_write], wave_write.writeframes() and
         # wave_write.close() will correct the number of frames in the header which is undesired
         bytes_io = BytesIO()
@@ -54,7 +54,7 @@ class WavAudioEncoder(AudioEncoder):
         wave_write.setframerate(audio_info.sample_rate)  # pylint: disable=no-member
         wave_write.writeframesraw(b"")  # pylint: disable=no-member
 
-        return ByteBuffer.new(byte_str=bytes_io.getvalue())
+        return Buffer.from_byte_str(bytes_io.getvalue())
 
     def push(self, *, audio: Audio, finish: bool) -> bytes:
         pcm_byte_str = audio.byte_str(audio_format=self.PCM_AUDIO_FORMAT)
@@ -62,12 +62,12 @@ class WavAudioEncoder(AudioEncoder):
         if self.yielded_header:
             return pcm_byte_str
 
-        wav_byte_buffer = self._wav_byte_buffer(audio_info=audio.info())
+        wav_buffer = self._wav_buffer(audio_info=audio.info())
         self.yielded_header = True
 
-        wav_byte_buffer.push(pcm_byte_str)
+        wav_buffer.push_byte_str(pcm_byte_str)
 
-        return wav_byte_buffer.value()
+        return wav_buffer.byte_str()
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -120,7 +120,7 @@ class Mp3AudioEncoder(AudioEncoder):
         if not finish:
             return mp3_byte_str
 
-        mp3_byte_buffer = ByteBuffer.new(byte_str=mp3_byte_str)
+        mp3_buffer = Buffer.from_byte_str(mp3_byte_str)
 
         # NOTE: self.lame_encoder.flush() raises an exception if called before self.lame_encoder.encode() is
         if self.is_empty:
@@ -129,8 +129,8 @@ class Mp3AudioEncoder(AudioEncoder):
             )
             silent_mp3_byte_str = self._push(audio=silent_audio)
 
-            mp3_byte_buffer.push(silent_mp3_byte_str)
+            mp3_buffer.push_byte_str(silent_mp3_byte_str)
 
-        mp3_byte_buffer.push(self.lame_encoder.flush())
+        mp3_buffer.push_byte_str(self.lame_encoder.flush())
 
-        return mp3_byte_buffer.value()
+        return mp3_buffer.byte_str()

@@ -1,7 +1,7 @@
 import dataclasses
 from typing import ClassVar, Self
 
-from mkutils.buffer import ByteBuffer, StringBuffer
+from mkutils.buffer import Buffer
 from mkutils.utils import Utils
 
 
@@ -24,26 +24,26 @@ class B64Stream:
     INITIAL_CURSOR: ClassVar[int] = 0
     CHUNK_SIZE: ClassVar[int] = 3
 
-    byte_buffer: ByteBuffer
-    b64_string: StringBuffer
+    byte_str_buffer: Buffer
+    b64_str_buffer: Buffer
     cursor: int
 
     @classmethod
     def new(cls) -> Self:
-        return cls(byte_buffer=ByteBuffer.new(), b64_string=StringBuffer.new(), cursor=cls.INITIAL_CURSOR)
+        return cls(byte_str_buffer=Buffer.empty(), b64_str_buffer=Buffer.empty(), cursor=cls.INITIAL_CURSOR)
 
     def len(self) -> int:
-        return self.byte_buffer.len()
+        return self.byte_str_buffer.num_bytes()
 
     def extend(self, *, byte_str: bytes, finish: bool = DEFAULT_EXTEND_FINISH) -> B64Chunk:
-        self.byte_buffer.push(byte_str)
+        self.byte_str_buffer.push_byte_str(byte_str)
 
         end = self.len() if finish else Utils.largest_multiple_leq(value=self.CHUNK_SIZE, max_value=self.len())
-        byte_str = self.byte_buffer.slice(begin=self.cursor, end=end)
+        byte_str = self.byte_str_buffer.slice(begin=self.cursor, end=end)
         b64_chunk = B64Chunk.new(byte_str=byte_str)
         self.cursor = end
 
-        self.b64_string.push(b64_chunk.string)
+        self.b64_str_buffer.push_text(b64_chunk.string)
 
         return b64_chunk
 
@@ -51,4 +51,4 @@ class B64Stream:
         return self.extend(byte_str=b"", finish=True)
 
     def string(self) -> str:
-        return self.b64_string.value()
+        return self.b64_str_buffer.text()

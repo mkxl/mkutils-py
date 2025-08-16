@@ -1,65 +1,64 @@
-import abc
 import dataclasses
-from typing import ClassVar, Optional, Protocol, Self
+from typing import ClassVar, Optional, Self
 
+from mkutils.typing import ByteStr
 from mkutils.utils import Utils
 
 
-class Buffer[T](Protocol):
-    @abc.abstractmethod
-    def len(self) -> int:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def reset(self) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def value(self) -> T:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def push(self, value: T) -> None:
-        raise NotImplementedError
-
-    def is_empty(self) -> bool:
-        return self.len() == 0
-
-    def is_nonempty(self) -> bool:
-        return not self.is_empty()
-
-    def pop(self) -> T:
-        value = self.value()
-
-        self.reset()
-
-        return value
-
-
 @dataclasses.dataclass(kw_only=True)
-class ByteBuffer(Buffer[bytes]):
-    DEFAULT_BYTE_STR: ClassVar[bytes] = b""
+class Buffer:
+    ENCODING: ClassVar[str] = Utils.ENCODING
 
     byte_array: bytearray
 
     @classmethod
-    def new(cls, *, byte_str: bytes = DEFAULT_BYTE_STR) -> Self:
+    def from_byte_str(cls, byte_str: ByteStr) -> Self:
         byte_array = bytearray(byte_str)
-        byte_buffer = cls(byte_array=byte_array)
+        buffer = cls(byte_array=byte_array)
 
-        return byte_buffer
+        return buffer
 
-    def len(self) -> int:
+    @classmethod
+    def empty(cls) -> Self:
+        return cls.from_byte_str(b"")
+
+    @classmethod
+    def from_text(cls, text: str) -> Self:
+        byte_str = cls._byte_str(text=text)
+        buffer = cls.from_byte_str(byte_str)
+
+        return buffer
+
+    @classmethod
+    def _byte_str(cls, *, text: str) -> bytes:
+        return text.encode(encoding=cls.ENCODING)
+
+    @classmethod
+    def _text_str(cls, *, byte_str: ByteStr) -> str:
+        return byte_str.decode(encoding=cls.ENCODING)
+
+    def num_bytes(self) -> int:
         return len(self.byte_array)
 
-    def reset(self) -> None:
-        return self.byte_array.clear()
-
-    def value(self) -> bytes:
+    def byte_str(self) -> bytes:
         return bytes(self.byte_array)
 
-    def push(self, value: bytes) -> None:
-        self.byte_array.extend(value)
+    def text(self) -> str:
+        return self._text_str(byte_str=self.byte_array)
+
+    def push_text(self, text: str) -> None:
+        byte_str = self._byte_str(text=text)
+
+        self.push_byte_str(byte_str)
+
+    def push_byte_str(self, byte_str: ByteStr) -> None:
+        self.byte_array.extend(byte_str)
+
+    def is_empty(self) -> bool:
+        return self.num_bytes() == 0
+
+    def is_nonempty(self) -> bool:
+        return not self.is_empty()
 
     def slice(self, *, begin: int, end: Optional[int]) -> bytes:
         byte_array = self.byte_array[begin:end]
@@ -68,36 +67,8 @@ class ByteBuffer(Buffer[bytes]):
         return byte_str
 
     def pop_left(self, *, chunk_size: int) -> bytes:
-        index = Utils.largest_multiple_leq(value=chunk_size, max_value=self.len())
+        index = Utils.largest_multiple_leq(value=chunk_size, max_value=self.num_bytes())
         byte_array, self.byte_array = Utils.split(value=self.byte_array, index=index)
         byte_str = bytes(byte_array)
 
         return byte_str
-
-
-@dataclasses.dataclass(kw_only=True)
-class StringBuffer(Buffer[str]):
-    INITAL_LENGTH: ClassVar[int] = 0
-
-    strings: list[str]
-    length: int
-
-    @classmethod
-    def new(cls) -> Self:
-        return cls(strings=[], length=cls.INITAL_LENGTH)
-
-    def len(self) -> int:
-        return self.length
-
-    def reset(self) -> None:
-        self.strings.clear()
-
-        self.length = self.INITAL_LENGTH
-
-    def value(self) -> str:
-        return "".join(self.strings)
-
-    def push(self, value: str) -> None:
-        self.strings.append(value)
-
-        self.length += len(value)
