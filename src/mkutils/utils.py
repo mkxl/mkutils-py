@@ -72,11 +72,21 @@ class Utils:
 
         return left + right  # ty: ignore[unsupported-operator]
 
+    @classmethod
+    def aempty[T](cls) -> AsyncIterator[T]:
+        return cls.aiter(cls.empty())
+
     @staticmethod
     async def aintersperse[T](*, value_aiter: AsyncIterable[T], filler: T) -> AsyncIterator[T]:
         async for value in value_aiter:
             yield value
             yield filler
+
+    @classmethod
+    async def aiter[T](cls, value_iter: Iterable[T]) -> AsyncIterator[T]:
+        for value in value_iter:
+            yield value
+            await cls.yield_now()
 
     # NOTE-5bfda6
     @classmethod
@@ -128,11 +138,6 @@ class Utils:
     @staticmethod
     async def aonce[T](value: T) -> AsyncIterator[T]:
         yield value
-
-    @staticmethod
-    async def aiter[T](value_iter: Iterable[T]) -> AsyncIterator[T]:
-        for value in value_iter:
-            yield value
 
     @classmethod
     async def araise_for_status(cls, *, response: Response) -> None:
