@@ -72,3 +72,9 @@ class Buffer:
         byte_str = bytes(byte_array)
 
         return byte_str
+
+    def pop(self) -> bytes:
+        byte_str = self.byte_str()
+        self.byte_array = bytearray()
+
+        return byte_str
