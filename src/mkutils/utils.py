@@ -210,6 +210,10 @@ class Utils:
         #   [https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.get_event_loop]
         return asyncio.get_running_loop().create_future()
 
+    @staticmethod
+    def head[T](value_iter: Iterable[T], *, count: int) -> Iterator[T]:
+        return itertools.islice(value_iter, count)
+
     @classmethod
     def iter_filepaths(cls, paths: Union[Path, Iterable[Path]]) -> Iterator[Path]:
         if isinstance(paths, Path):
