@@ -314,6 +314,10 @@ class Utils:
         return base_model
 
     @staticmethod
+    def nonnegative[T](value: T) -> T:
+        return max(0, value)  # ty: ignore[invalid-return-type]
+
+    @staticmethod
     def once[T](value: T) -> Iterator[T]:
         yield value
 
