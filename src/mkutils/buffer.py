@@ -34,7 +34,7 @@ class Buffer:
         return text.encode(encoding=cls.ENCODING)
 
     @classmethod
-    def _text_str(cls, *, byte_str: ByteStr) -> str:
+    def _text(cls, *, byte_str: ByteStr) -> str:
         return byte_str.decode(encoding=cls.ENCODING)
 
     def num_bytes(self) -> int:
@@ -44,7 +44,7 @@ class Buffer:
         return bytes(self.byte_array)
 
     def text(self) -> str:
-        return self._text_str(byte_str=self.byte_array)
+        return self._text(byte_str=self.byte_array)
 
     def push_text(self, text: str) -> None:
         byte_str = self._byte_str(text=text)
