@@ -25,7 +25,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from mkutils.interval import Interval
 from mkutils.logger import JsonFormatter, Logger
 from mkutils.time import Duration
-from mkutils.typing import AsyncFunction, JsonObject, SyncFunction
+from mkutils.typing import AsyncFunction, ByteStr, JsonObject, SyncFunction
 
 logger: Logger = Logger.new(__name__)
 
@@ -182,6 +182,10 @@ class Utils:
     def b64encode(cls, byte_str: bytes) -> str:
         return base64.b64encode(byte_str).decode(encoding=cls.ENCODING)
 
+    @classmethod
+    def byte_str(cls, *, text: str) -> bytes:
+        return text.encode(encoding=cls.ENCODING)
+
     @staticmethod
     def create_task[**P, T](fn: AsyncFunction[P, T], *args: P.args, **kwargs: P.kwargs) -> Task[T]:
         coro = fn(*args, **kwargs)
@@ -333,6 +337,10 @@ class Utils:
         pair = (left, right)
 
         return pair
+
+    @classmethod
+    def text(cls, *, byte_str: ByteStr) -> str:
+        return byte_str.decode(encoding=cls.ENCODING)
 
     # NOTE-17964d
     @staticmethod

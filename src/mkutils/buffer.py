@@ -24,18 +24,10 @@ class Buffer:
 
     @classmethod
     def from_text(cls, text: str) -> Self:
-        byte_str = cls._byte_str(text=text)
+        byte_str = Utils.byte_str(text=text)
         buffer = cls.from_byte_str(byte_str)
 
         return buffer
-
-    @classmethod
-    def _byte_str(cls, *, text: str) -> bytes:
-        return text.encode(encoding=cls.ENCODING)
-
-    @classmethod
-    def _text(cls, *, byte_str: ByteStr) -> str:
-        return byte_str.decode(encoding=cls.ENCODING)
 
     def num_bytes(self) -> int:
         return len(self.byte_array)
@@ -44,10 +36,10 @@ class Buffer:
         return bytes(self.byte_array)
 
     def text(self) -> str:
-        return self._text(byte_str=self.byte_array)
+        return Utils.text(byte_str=self.byte_array)
 
     def push_text(self, text: str) -> None:
-        byte_str = self._byte_str(text=text)
+        byte_str = Utils.byte_str(text=text)
 
         self.push_byte_str(byte_str)
 
