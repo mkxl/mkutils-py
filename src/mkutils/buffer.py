@@ -58,15 +58,18 @@ class Buffer:
 
         return byte_str
 
-    def pop_left(self, *, chunk_size: int) -> bytes:
+    def pop_bytes_left(self, *, chunk_size: int) -> bytes:
         index = Utils.largest_multiple_leq(value=chunk_size, max_value=self.num_bytes())
         byte_array, self.byte_array = Utils.split(value=self.byte_array, index=index)
         byte_str = bytes(byte_array)
 
         return byte_str
 
-    def pop(self) -> bytes:
+    def pop_bytes(self) -> bytes:
         byte_str = self.byte_str()
         self.byte_array = bytearray()
 
         return byte_str
+
+    def pop_text(self) -> str:
+        return Utils.text(byte_str=self.pop_bytes())

@@ -6,7 +6,7 @@ import itertools
 import mimetypes
 import textwrap
 from asyncio import FIRST_COMPLETED, Future, Task
-from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Iterable, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import (
     Any,
@@ -237,6 +237,10 @@ class Utils:
                 yield path
 
     @staticmethod
+    def iter_indices_reversed(*, total: int) -> Iterator[int]:
+        yield from range(total - 1, -1, -1)
+
+    @staticmethod
     def iter_intervals(*, begin: int, end: int, chunk_size: int, exact: bool) -> Iterator[Interval[int]]:
         endpoint_range = range(begin, end, chunk_size)
         endpoint_iter = iter(endpoint_range)
@@ -329,6 +333,14 @@ class Utils:
     @staticmethod
     def once[T](value: T) -> Iterator[T]:
         yield value
+
+    @staticmethod
+    def rfind(*, text: str, chars: Sequence[str]) -> Optional[int]:
+        for index in Utils.iter_indices_reversed(total=len(text)):
+            if text[index] in chars:
+                return index
+
+        return None
 
     @staticmethod
     def split[T](*, value: T, index: int) -> tuple[T, T]:

@@ -45,7 +45,7 @@ class WavAudioEncoder(AudioEncoder):
         # NOTE: per [https://docs.python.org/3/library/wave.html#wave.Wave_write], wave_write.writeframes() and
         # wave_write.close() will correct the number of frames in the header which is undesired
         bytes_io = BytesIO()
-        num_frames = self.header_duration.sample_index(sample_rate=audio_info.sample_rate)
+        num_frames = self.header_duration.frame_index(sample_rate=audio_info.sample_rate)
         wave_write = wave.open(bytes_io, "wb")  # noqa: SIM115
 
         wave_write.setnframes(num_frames)  # pylint: disable=no-member
@@ -124,9 +124,7 @@ class Mp3AudioEncoder(AudioEncoder):
 
         # NOTE: self.lame_encoder.flush() raises an exception if called before self.lame_encoder.encode() is
         if self.is_empty:
-            silent_audio = Audio.silence(
-                num_samples=1, num_channels=audio.num_channels(), sample_rate=audio.sample_rate
-            )
+            silent_audio = Audio.silence(num_frames=1, num_channels=audio.num_channels(), sample_rate=audio.sample_rate)
             silent_mp3_byte_str = self._push(audio=silent_audio)
 
             mp3_buffer.push_byte_str(silent_mp3_byte_str)

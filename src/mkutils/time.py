@@ -56,7 +56,7 @@ class Duration:
     def milliseconds(self) -> int:
         return int(self.seconds() * self.MILLISECONDS_PER_SECOND)
 
-    def sample_index(self, *, sample_rate: int) -> int:
+    def frame_index(self, *, sample_rate: int) -> int:
         return int(self.seconds() * sample_rate)
 
     # NOTE: have a [string()] method so that i can do method chaining [duration.string()] rather than [str(duration)]
