@@ -43,21 +43,24 @@ class Microphone:
     event_loop: AbstractEventLoop
 
     @classmethod
-    def new(cls, *, device: int = DEFAULT_DEVICE, dtype: Dtype = DEFAULT_DTYPE) -> Self:
-        audio_info = AudioInfo.from_device(device=device)
+    @contextlib.contextmanager
+    def context(cls, *, device: int = DEFAULT_DEVICE, dtype: Dtype = DEFAULT_DTYPE) -> Iterator[Self]:
+        audio_info = cls._audio_info(device=device)
         microphone = cls(
             audio_info=audio_info, dtype=dtype, audio_queue=Queue.new(), event_loop=asyncio.get_running_loop()
         )
 
+        with microphone._raw_input_stream():
+            yield microphone
+
+    @classmethod
+    def _audio_info(cls, *, device: int) -> AudioInfo:
+        audio_info = AudioInfo.from_device(device=device)
+
         if audio_info.num_channels == 0:
             raise ValueError(cls.ZERO_INPUT_CHANNELS_ERROR_MESSAGE)
 
-        return microphone
-
-    @contextlib.contextmanager
-    def context(self) -> Iterator[None]:
-        with self._raw_input_stream():
-            yield None
+        return audio_info
 
     # NOTE: type annotations gotten from logging
     def _callback(
