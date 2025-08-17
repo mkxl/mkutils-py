@@ -237,8 +237,8 @@ class Utils:
                 yield path
 
     @staticmethod
-    def iter_intervals(*, begin: int, total: int, chunk_size: int, exact: bool) -> Iterator[Interval[int]]:
-        endpoint_range = range(begin, total, chunk_size)
+    def iter_intervals(*, begin: int, end: int, chunk_size: int, exact: bool) -> Iterator[Interval[int]]:
+        endpoint_range = range(begin, end, chunk_size)
         endpoint_iter = iter(endpoint_range)
         interval_begin = next(endpoint_iter, None)
 
@@ -250,8 +250,8 @@ class Utils:
 
             interval_begin = endpoint
 
-        if not exact and interval_begin != total:
-            yield Interval[int](begin=interval_begin, end=total)
+        if not exact and interval_begin != end:
+            yield Interval[int](begin=interval_begin, end=end)
 
     # NOTE-5bfda6: source of truth implementation
     @classmethod

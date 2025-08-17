@@ -12,7 +12,7 @@ from mkutils.process import Process
 from mkutils.queue import EagerQueue, Queue, TaskQueue
 from mkutils.sink import Sink
 from mkutils.time import Datetime, Duration
-from mkutils.typing import AsyncFunction, Function, JsonObject, SyncFunction
+from mkutils.typing import AsyncFunction, Function, JsonObject, NestedList, SyncFunction
 from mkutils.utils import Item, Shape, Utils
 
 __all__: list[str] = [
@@ -43,6 +43,7 @@ __all__: list[str] = [
     "Logger",
     "Microphone",
     "Mp3AudioEncoder",
+    "NestedList",
     "PcmAudioEncoder",
     "Process",
     "Queue",
