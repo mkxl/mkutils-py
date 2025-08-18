@@ -3,7 +3,7 @@ import dataclasses
 from collections.abc import AsyncIterator
 from typing import Any, Protocol, Union
 
-from mkutils import EagerQueue
+from mkutils.queue import EagerQueue
 
 type LlmOutput = Union["TextChunk", "ToolCall"]
 

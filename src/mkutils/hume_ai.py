@@ -5,8 +5,13 @@ from typing import ClassVar, Optional, Self
 
 from pydantic import BaseModel
 
-from mkutils import Audio, AudioFormat, AudioInfo, Buffer, Http, HttpRequest, Logger, Queue, Utils
+from mkutils.audio import Audio, AudioFormat, AudioInfo
+from mkutils.buffer import Buffer
+from mkutils.http import Http, HttpRequest
+from mkutils.logger import Logger
+from mkutils.queue import Queue
 from mkutils.tts import Tts
+from mkutils.utils import Utils
 
 logger: Logger = Logger.new(__name__)
 

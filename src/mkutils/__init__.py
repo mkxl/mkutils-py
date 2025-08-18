@@ -6,12 +6,14 @@ from mkutils.cli import Cli
 from mkutils.enum import Enum
 from mkutils.http import Http, HttpRequest
 from mkutils.interval import Interval
+from mkutils.llm import Llm, LlmOutput, LlmResponse, TextChunk, ToolCall
 from mkutils.logger import JsonFormatter, Level, Logger
 from mkutils.microphone import Dtype, DtypeInfo, Microphone
 from mkutils.process import Process
 from mkutils.queue import EagerQueue, Queue, TaskQueue
 from mkutils.sink import Sink
 from mkutils.time import Datetime, Duration
+from mkutils.tts import Tts
 from mkutils.typing import AsyncFunction, Function, JsonObject, NestedList, SyncFunction
 from mkutils.utils import Item, Shape, Utils
 
@@ -40,6 +42,9 @@ __all__: list[str] = [
     "JsonFormatter",
     "JsonObject",
     "Level",
+    "Llm",
+    "LlmOutput",
+    "LlmResponse",
     "Logger",
     "Microphone",
     "Mp3AudioEncoder",
@@ -51,6 +56,9 @@ __all__: list[str] = [
     "Sink",
     "SyncFunction",
     "TaskQueue",
+    "TextChunk",
+    "ToolCall",
+    "Tts",
     "Utils",
     "WavAudioEncoder",
 ]
