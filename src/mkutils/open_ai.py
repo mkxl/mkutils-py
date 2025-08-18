@@ -94,4 +94,4 @@ class OpenAi(Llm):
                 case FunctionCall() as function_call:
                     yield function_call.tool_call()
                 case ignored_response:
-                    logger.warning(ignored_response=ignored_response)
+                    logger.debug(ignored_response=ignored_response)
