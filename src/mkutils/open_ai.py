@@ -82,7 +82,7 @@ class OpenAi(Llm):
         self.input.append({"type": "function_call_output", "call_id": tool_call_id, "output": result})
 
     def _content(self) -> str:
-        return Utils.json_dumps({"model": self.model, "input": self.input, "tools": self.tools})
+        return Utils.json_dumps({"model": self.model, "input": self.input, "tools": self.tools, "stream": True})
 
     # pylint: disable=invalid-overridden-method
     @logger.instrument()
