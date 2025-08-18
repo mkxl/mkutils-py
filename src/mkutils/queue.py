@@ -64,14 +64,18 @@ from mkutils.utils import Utils
 @dataclasses.dataclass(kw_only=True)
 class Queue[T](Sink[T]):
     APPEND_ITEM_ERROR_MESSAGE: ClassVar[str] = "unable to append item because the queue is closed"
+    DEFAULT_VALUE_ITER: ClassVar[Iterable[T]] = ()
     INITIAL_IS_CLOSED: ClassVar[bool] = False
 
     items: collections.deque[T]
     is_closed: bool
 
     @classmethod
-    def new(cls) -> Self:
-        return cls(items=collections.deque(), is_closed=cls.INITIAL_IS_CLOSED)
+    def new(cls, value_iter: Iterable[T] = DEFAULT_VALUE_ITER) -> Self:
+        items = collections.deque(value_iter)
+        queue = cls(items=items, is_closed=cls.INITIAL_IS_CLOSED)
+
+        return queue
 
     def __await__(self) -> Generator[Any, Any, T]:
         while True:
