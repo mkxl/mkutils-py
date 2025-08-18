@@ -5,8 +5,11 @@ from typing import Any, ClassVar, Literal, Optional, Self, Union
 
 from pydantic import BaseModel
 
-from mkutils import Http, HttpRequest, JsonObject, Logger, Utils
+from mkutils.http import Http, HttpRequest
 from mkutils.llm import Llm, LlmOutput, TextChunk, ToolCall
+from mkutils.logger import Logger
+from mkutils.typing import JsonObject
+from mkutils.utils import Utils
 
 logger: Logger = Logger.new(__name__)
 

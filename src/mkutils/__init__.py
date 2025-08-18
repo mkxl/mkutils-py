@@ -5,10 +5,12 @@ from mkutils.buffer import Buffer
 from mkutils.cli import Cli
 from mkutils.enum import Enum
 from mkutils.http import Http, HttpRequest
+from mkutils.hume_ai import HumeAi
 from mkutils.interval import Interval
 from mkutils.llm import Llm, LlmOutput, LlmResponse, TextChunk, ToolCall
 from mkutils.logger import JsonFormatter, Level, Logger
 from mkutils.microphone import Dtype, DtypeInfo, Microphone
+from mkutils.open_ai import OpenAi
 from mkutils.process import Process
 from mkutils.queue import EagerQueue, Queue, TaskQueue
 from mkutils.sink import Sink
@@ -37,6 +39,7 @@ __all__: list[str] = [
     "Function",
     "Http",
     "HttpRequest",
+    "HumeAi",
     "Interval",
     "Item",
     "JsonFormatter",
@@ -49,6 +52,7 @@ __all__: list[str] = [
     "Microphone",
     "Mp3AudioEncoder",
     "NestedList",
+    "OpenAi",
     "PcmAudioEncoder",
     "Process",
     "Queue",
