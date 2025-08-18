@@ -35,15 +35,17 @@ class HumeAi(Tts):
     text_queue: Queue[str]
     text_buffer: Buffer
     voice_name: str
+    stream_inputs: bool
 
     @classmethod
-    def new(cls, *, http: Http, api_key: str, voice_name: str) -> Self:
+    def new(cls, *, http: Http, api_key: str, voice_name: str, stream_inputs: bool) -> Self:
         base_http_request = cls._base_http_request(http=http, api_key=api_key)
         hume_ai = cls(
             base_http_request=base_http_request,
             text_queue=Queue.new(),
             text_buffer=Buffer.empty(),
             voice_name=voice_name,
+            stream_inputs=stream_inputs,
         )
 
         return hume_ai
@@ -94,6 +96,11 @@ class HumeAi(Tts):
 
     # TODO: more sophisticated sentence splitting implementation
     async def asend(self, *, text: str) -> None:
+        if not self.stream_inputs:
+            self.text_buffer.push_text(text)
+
+            return
+
         index = Utils.rfind(text=text, chars=self.TERMINAL_PUNCTUATION)
 
         if index is None:
