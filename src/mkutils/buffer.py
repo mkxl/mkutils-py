@@ -1,5 +1,5 @@
 import dataclasses
-from typing import ClassVar, Optional, Self
+from typing import Optional, Self
 
 from mkutils.typing import ByteStr
 from mkutils.utils import Utils
@@ -7,8 +7,6 @@ from mkutils.utils import Utils
 
 @dataclasses.dataclass(kw_only=True)
 class Buffer:
-    ENCODING: ClassVar[str] = Utils.ENCODING
-
     byte_array: bytearray
 
     @classmethod
