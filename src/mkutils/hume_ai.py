@@ -6,10 +6,10 @@ from typing import ClassVar, Optional, Self
 from pydantic import BaseModel
 
 from mkutils.audio import Audio, AudioFormat, AudioInfo
-from mkutils.buffer import Buffer
 from mkutils.http import Http, HttpRequest
 from mkutils.logger import Logger
 from mkutils.queue import Queue
+from mkutils.sentence_splitter import SentenceSplitter
 from mkutils.tts import Tts
 from mkutils.utils import Utils
 
@@ -20,20 +20,18 @@ class Chunk(BaseModel):
     generation_id: str
     audio: str
 
+    def byte_str(self) -> bytes:
+        return Utils.b64decode(self.audio)
+
 
 @dataclasses.dataclass
 class HumeAi(Tts):
     AUDIO_FORMAT: ClassVar[AudioFormat] = AudioFormat.PCM_S16LE
     AUDIO_INFO: ClassVar[AudioInfo] = AudioInfo(sample_rate=48_000, num_channels=1)
-    CHUNK_SIZE = AUDIO_FORMAT.value.pcm_sample_width_with(default=1)
-    HEADER_NAME_API_KEY: ClassVar[str] = "x-hume-api-key"
-    MIN_AUDIO_BYTE_STR_LENGTH: ClassVar[int] = 2**10
-    URL: ClassVar[str] = "https://api.hume.ai/v0/tts/stream/json"
-    TERMINAL_PUNCTUATION: ClassVar[str] = ".?!"
 
     base_http_request: HttpRequest
     text_queue: Queue[str]
-    text_buffer: Buffer
+    sentence_splitter: SentenceSplitter
     voice_name: str
 
     @classmethod
@@ -42,7 +40,7 @@ class HumeAi(Tts):
         hume_ai = cls(
             base_http_request=base_http_request,
             text_queue=Queue.new(),
-            text_buffer=Buffer.empty(),
+            sentence_splitter=SentenceSplitter.new(),
             voice_name=voice_name,
         )
 
@@ -50,8 +48,10 @@ class HumeAi(Tts):
 
     @classmethod
     def _base_http_request(cls, *, http: Http, api_key: str) -> HttpRequest:
-        headers = {cls.HEADER_NAME_API_KEY: api_key}
-        base_http_request = HttpRequest.new(http=http, method=HTTPMethod.POST, url=cls.URL, headers=headers)
+        headers = {"x-hume-api-key": api_key}
+        base_http_request = HttpRequest.new(
+            http=http, method=HTTPMethod.POST, url="https://api.hume.ai/v0/tts/stream/json", headers=headers
+        )
 
         return base_http_request
 
@@ -74,7 +74,6 @@ class HumeAi(Tts):
 
     # pylint: disable=invalid-overridden-method
     async def aiter_audio(self) -> AsyncIterator[Audio]:
-        byte_str_buffer = Buffer.empty()
         context_generation_id = None
 
         async for text in self.text_queue:
@@ -83,38 +82,23 @@ class HumeAi(Tts):
 
             async for line in http_request.aiter_lines():
                 chunk = Chunk.model_validate_json(line)
-                byte_str = Utils.b64decode(chunk.audio)
+                audio = self._audio(byte_str=chunk.byte_str())
                 context_generation_id = chunk.generation_id
 
-                byte_str_buffer.push_byte_str(byte_str)
+                yield audio
 
-                if self.MIN_AUDIO_BYTE_STR_LENGTH <= byte_str_buffer.num_bytes():  # noqa: SIM300
-                    byte_str = byte_str_buffer.pop_bytes_left(chunk_size=self.CHUNK_SIZE)
-
-                    yield self._audio(byte_str=byte_str)
+    def _append_text_to_queue(self, *, text: str) -> None:
+        if text != "":
+            self.text_queue.append(text)
 
     # TODO: more sophisticated sentence splitting implementation
     async def asend(self, *, text: str) -> None:
-        index = Utils.rfind(text=text, chars=self.TERMINAL_PUNCTUATION)
-
-        if index is None:
-            self.text_buffer.push_text(text)
-
-            return
-
-        prefix, suffix = Utils.split(value=text, index=index)
-
-        self.text_buffer.push_text(prefix)
-
-        await self.aflush()
-
-        self.text_buffer.push_text(suffix)
+        match self.sentence_splitter.push(text=text):
+            case str(sentence):
+                self._append_text_to_queue(text=sentence)
 
     async def aflush(self) -> None:
-        text = self.text_buffer.pop_text()
-
-        if text != "":
-            self.text_queue.append(text)
+        self._append_text_to_queue(text=self.sentence_splitter.pop())
 
     async def aclose(self) -> None:
         await self.text_queue.aclose()

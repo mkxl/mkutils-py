@@ -13,6 +13,7 @@ from mkutils.microphone import Dtype, DtypeInfo, Microphone
 from mkutils.open_ai import OpenAi
 from mkutils.process import Process
 from mkutils.queue import EagerQueue, Queue, TaskQueue
+from mkutils.sentence_splitter import SentenceSplitter
 from mkutils.sink import Sink
 from mkutils.time import Datetime, Duration
 from mkutils.tts import Tts
@@ -57,6 +58,7 @@ __all__: list[str] = [
     "Process",
     "Queue",
     "Shape",
+    "SentenceSplitter",
     "Sink",
     "SyncFunction",
     "TaskQueue",
