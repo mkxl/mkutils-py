@@ -15,6 +15,7 @@ from typing import Any, ClassVar, Optional, Self, TextIO, Union
 
 import orjson
 from pydantic import BaseModel
+from uvicorn.config import LOGGING_CONFIG as UVICORN_LOGGING_CONFIG
 
 from mkutils.typing import Function, JsonObject, SyncFunction
 
@@ -114,6 +115,8 @@ class Logger:
     DEFAULT_POPULATE_MESSAGE: ClassVar[bool] = False
     LOGGING_FORCE: ClassVar[bool] = True
     SPANS_FIELD_NAME: ClassVar[str] = "spans"
+    UVICORN_LOGGER_NAMES: ClassVar[tuple[str, ...]] = tuple(UVICORN_LOGGING_CONFIG["loggers"])
+    DEFAULT_UVICORN_LOGGER_PROPAGATE: ClassVar[bool] = False
 
     std_logger: StdLogger
 
@@ -264,3 +267,10 @@ class Logger:
 
         for handler in cls._root_std_logger().handlers:
             std_logger.addHandler(handler)
+
+    # NOTE: needs to be done after [Config] is instantiated as [Config.__init__()] sets up logging:
+    # [https://github.com/encode/uvicorn/blob/master/uvicorn/config.py]
+    @classmethod
+    def init_uvicorn(cls, *, propagate: bool = DEFAULT_UVICORN_LOGGER_PROPAGATE) -> None:
+        for name in cls.UVICORN_LOGGER_NAMES:
+            Logger.adopt_root_handlers(name=name, propagate=propagate)
