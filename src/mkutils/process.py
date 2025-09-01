@@ -3,6 +3,7 @@ import dataclasses
 from asyncio.subprocess import PIPE
 from asyncio.subprocess import Process as StdProcess
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import ClassVar, Optional, Self
 
 from mkutils.logger import Logger
@@ -18,9 +19,11 @@ class Process(Sink[bytes]):
     std_process: StdProcess
 
     @classmethod
-    async def new(cls, command: str, *args: str) -> Self:
+    async def new(
+        cls, command: str, *args: str, cwd: Optional[Path] = None, env: Optional[dict[str, str]] = None
+    ) -> Self:
         std_process = await asyncio.create_subprocess_exec(
-            command, *args, limit=cls.READ_SIZE, stdin=PIPE, stdout=PIPE, stderr=PIPE
+            command, *args, limit=cls.READ_SIZE, stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=cwd, env=env
         )
         process = cls(std_process=std_process)
 
