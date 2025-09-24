@@ -19,8 +19,10 @@ from typing import (
 
 import orjson
 import yaml
+from fastapi.openapi.constants import REF_TEMPLATE as FASTAPI_REF_TEMPLATE
 from httpx import URL, HTTPError, Response
 from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic.json_schema import GenerateJsonSchema
 
 from mkutils.interval import Interval
 from mkutils.logger import JsonFormatter, Logger
@@ -57,6 +59,7 @@ class Utils:
     ENCODING: ClassVar[str] = JsonFormatter.ENCODING
     SENTINEL: ClassVar[object] = object()
     YAML_DUMPS_SORT_KEYS: ClassVar[bool] = False
+    REF_TEMPLATE_SCHEMA: ClassVar[str] = FASTAPI_REF_TEMPLATE
 
     @staticmethod
     async def aconsume(value_aiter: AsyncIterable[Any]) -> None:
@@ -72,6 +75,15 @@ class Utils:
             return left
 
         return left + right  # ty: ignore[unsupported-operator]
+
+    @classmethod
+    def add_schema(cls, *, openapi: JsonObject, type_arg: type[BaseModel]) -> None:
+        keys = (path_component for path_component in cls.REF_TEMPLATE_SCHEMA.split("/") if path_component.isalpha())
+        schemas = cls.json_query(json_obj=openapi, keys=keys)
+        schema_name = cls.schema_name(type_arg=type_arg)
+        schemas[schema_name] = schema = type_arg.model_json_schema(ref_template=cls.REF_TEMPLATE_SCHEMA)
+
+        schema.pop("$defs", None)
 
     @classmethod
     def aempty[T](cls) -> AsyncIterator[T]:
@@ -292,6 +304,15 @@ class Utils:
         return orjson.loads(json_str)
 
     @staticmethod
+    def json_query(*, json_obj: JsonObject, keys: Iterable[Union[int, str]]) -> Any:
+        value = json_obj
+
+        for key in keys:
+            value = value[key]  # ty: ignore[call-non-callable]
+
+        return value
+
+    @staticmethod
     def keyed_by[T](*, attr: str) -> SyncFunction[type[T], type[T]]:
         def decorator(cls: type[T]) -> type[T]:
             def __str__(self) -> str:
@@ -342,6 +363,17 @@ class Utils:
                 return index
 
         return None
+
+    @classmethod
+    def schema_name[T](cls, *, type_arg: type[T]) -> str:
+        return GenerateJsonSchema(ref_template=cls.REF_TEMPLATE_SCHEMA).normalize_name(type_arg.__name__)
+
+    @classmethod
+    def schema_path[T](cls, *, type_arg: type[T]) -> str:
+        model = cls.schema_name(type_arg=type_arg)
+        schema_path = cls.REF_TEMPLATE_SCHEMA.format(model=model)
+
+        return schema_path
 
     @staticmethod
     def split[T](*, value: T, index: int) -> tuple[T, T]:
