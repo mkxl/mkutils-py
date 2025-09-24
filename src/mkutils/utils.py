@@ -387,6 +387,13 @@ class Utils:
 
         return value_error
 
+    @staticmethod
+    def yaml_dumps(json_obj: Optional[JsonObject] = None, **kwargs: Any) -> str:
+        json_obj = kwargs if json_obj is None else (json_obj | kwargs)
+        yaml_str = yaml.dump(json_obj)
+
+        return yaml_str
+
     # NOTE: yield points: [https://tokio.rs/blog/2020-04-preemption]
     @staticmethod
     async def yield_now(*, seconds: float = Duration.DEFAULT_SECONDS) -> None:
