@@ -56,6 +56,7 @@ class Item[T]:
 class Utils:
     ENCODING: ClassVar[str] = JsonFormatter.ENCODING
     SENTINEL: ClassVar[object] = object()
+    YAML_DUMPS_SORT_KEYS: ClassVar[bool] = False
 
     @staticmethod
     async def aconsume(value_aiter: AsyncIterable[Any]) -> None:
@@ -387,10 +388,10 @@ class Utils:
 
         return value_error
 
-    @staticmethod
-    def yaml_dumps(json_obj: Optional[JsonObject] = None, **kwargs: Any) -> str:
+    @classmethod
+    def yaml_dumps(cls, json_obj: Optional[JsonObject] = None, **kwargs: Any) -> str:
         json_obj = kwargs if json_obj is None else (json_obj | kwargs)
-        yaml_str = yaml.dump(json_obj)
+        yaml_str = yaml.dump(json_obj, sort_keys=cls.YAML_DUMPS_SORT_KEYS)
 
         return yaml_str
 
