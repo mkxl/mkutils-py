@@ -199,6 +199,33 @@ class Utils:
     def byte_str(cls, *, text: str) -> bytes:
         return text.encode(encoding=cls.ENCODING)
 
+    # pylint: disable=invalid-name
+    @staticmethod
+    def collect[**X, Y, Z](
+        iter_func: SyncFunction[X, Iterator[Y]],
+        *args: X.args,
+        collector: SyncFunction[Iterator[Y], Z] = list,  # type: ignore[assignment]
+        **kwargs: X.kwargs,
+    ) -> Any:
+        value_iter = iter_func(*args, **kwargs)
+        values = collector(value_iter)
+
+        return values
+
+    # pylint: disable=invalid-name
+    @classmethod
+    def collected[**X, Y, Z](
+        cls, *, collector: SyncFunction[Iterator[Y], Z]
+    ) -> SyncFunction[SyncFunction[X, Iterator[Y]], SyncFunction[X, Z]]:
+        def decorator(iter_func: SyncFunction[X, Iterator[Y]]) -> SyncFunction[X, Z]:
+            @functools.wraps(iter_func)
+            def func(*args: X.args, **kwargs: X.kwargs) -> Z:
+                return cls.collect(iter_func, *args, **kwargs, collector=collector)
+
+            return func
+
+        return decorator
+
     @staticmethod
     def create_task[**P, T](fn: AsyncFunction[P, T], *args: P.args, **kwargs: P.kwargs) -> Task[T]:
         coro = fn(*args, **kwargs)
