@@ -342,7 +342,7 @@ class Utils:
         return mime_type
 
     @staticmethod
-    def model_validate_yaml[S: BaseModel](yaml_str: str, *, type_arg: type[S]) -> S:
+    def model_validate_yaml[T](yaml_str: str, *, type_arg: type[T]) -> T:
         value = yaml.safe_load(yaml_str)
         base_model = TypeAdapter(type_arg).validate_python(value)
 
@@ -405,6 +405,14 @@ class Utils:
             return value
 
         return fn
+
+    @classmethod
+    def type_from_filepath[T](cls, *, type_arg: type[T], filepath: Path, is_yaml: bool = False) -> T:
+        type_adapter = TypeAdapter(type_arg)
+        text = filepath.read_text()
+        value = cls.model_validate_yaml(text, type_arg=type_arg) if is_yaml else type_adapter.validate_json(text)
+
+        return value
 
     @staticmethod
     def url(*, url: str, query_params: Optional[JsonObject]) -> str:
